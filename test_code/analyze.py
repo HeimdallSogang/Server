@@ -8,7 +8,7 @@ from io import BytesIO
 import re
 import json
 
-
+## 커밋 테스트용 주석
 load_dotenv()
 def analyze_view(text):
     try :
