@@ -4,10 +4,7 @@ import requests
 import xml.etree.ElementTree as ET ## XML 데이터 파싱을 위한 패키지
 
 load_dotenv()
-stockPriceApiBaseurl = "https://apis.data.go.kr/1160100/service/GetStockSecuritiesInfoService/getStockPriceInfo"
-
-
-url = "http://apis.data.go.kr/1160100/service/GetStockSecuritiesInfoService/getStockPriceInfo"
+stockPriceApiBaseurl = "http://apis.data.go.kr/1160100/service/GetStockSecuritiesInfoService/getStockPriceInfo"
 
 
 # 요청 파라미터 설정
@@ -20,7 +17,9 @@ params = {
 }
 
 # GET 요청 보내기
-response = requests.get(url, params=params)
+response = requests.get(stockPriceApiBaseurl, params=params)
+
+print(response.url)
 
 
 # 응답 확인
@@ -35,6 +34,12 @@ if response.status_code == 200:
     clpr_elements = root.findall(".//clpr")
 
     startPrice = -1
+
+    ## 지금은 hidden_sentiment가 SELL인 경우를 기준으로 로직 작성
+    days_hit = 0
+    days_missed = 0
+    days_to_first_hit = 0
+    days_to_first_miss = 0
     # clpr 값 출력
     for i in range(len(basDt_elements)-1, -1, -1):
 
@@ -52,13 +57,29 @@ if response.status_code == 200:
         if startPrice < clpr_value:
             priceStatus = "오름"
 
+            if days_missed == 0:
+                days_to_first_miss= len(basDt_elements)-1 - i
+
+            days_missed += 1
+            
+
         elif startPrice > clpr_value:
             priceStatus = "내림"
+
+            if days_hit == 0:
+                days_to_first_hit = len(basDt_elements)-1 - i
+
+            days_hit += 1
 
         else:
             priceStatus = ""
 
         print(f"{basDt_element}의 종가 : {clpr_value} {priceStatus}")
+
+    print(f"days_hit : {days_hit}")
+    print(f"days_missed : {days_missed}")
+    print(f"days_to_first_hit : {days_to_first_hit}")
+    print(f"days_to_first_miss : {days_to_first_miss}")
 
 else:
     print("요청 실패:", response.status_code)
