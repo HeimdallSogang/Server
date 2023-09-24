@@ -55,7 +55,7 @@ def analyze(text):
             "부정 의견 1",
             "부정 의견 2",
         ],
-        "analysts": [
+        "writer": [
             "김이름",
             "홍길동",
         ],
@@ -281,7 +281,7 @@ def fetch_stock_reports(stock_name, currency="KRW"):
                 analysis = analyze(text)
                 for neg_point in analysis["negative thoughts"]:
                     negative_points.append(neg_point)
-                for analyst in analysis["analysts"]:
+                for analyst in analysis["writer"]:
                     analyst_names.add(analyst)
 
             report_detail = get_report_detail_info(report_detail_page_url)
