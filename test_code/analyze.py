@@ -10,7 +10,7 @@ import json
 
 
 load_dotenv()
-def analyze_view(text):
+def analyze(text):
     try :
         openai.api_key = os.getenv("OPENAI_API_KEY")
         messages = [
