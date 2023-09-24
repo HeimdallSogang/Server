@@ -268,6 +268,12 @@ def fetch_stock_reports(stock_name, currency="KRW"):
             publish_date_text = columns[4].text.strip()
             publish_date = text_to_date(publish_date_text)
 
+            # check if report already in DB: report with same title and publish date is considered same report
+            if Report.objects.filter(
+                title=report_title, publish_date=publish_date
+            ).exists():
+                continue
+
             negative_points = []
             analyst_names = set()
             text_per_page = read_pdf(report_url)
@@ -295,9 +301,9 @@ def fetch_stock_reports(stock_name, currency="KRW"):
                 written_sentiment=written_sentiment,
                 price_on_publish=get_price_on_publish(stock, publish_date),
             )
-            
+
             # save analaysts to DB
-            try: 
+            try:
                 analyst_list = []
                 for name in analyst_names:
                     analyst, _ = Analyst.objects.get_or_create(
@@ -315,20 +321,19 @@ def fetch_stock_reports(stock_name, currency="KRW"):
             next_publish_date = get_next_publish_date(
                 report=report, analysts=analyst_list
             )
-            
+
             report.hidden_sentiment = hidden_sentiment
-            report.is_newest = (next_publish_date is None)
+            report.is_newest = next_publish_date is None
             report.next_publish_date = next_publish_date
 
             # save report to DB
             try:
-                # TODO: 저장하려는 리포트의 중복성 확인 후 중복 안되게 저장하도록 수정
                 report.save()
             except Exception as e:
                 print(f"Exception on saving report: {report}")
                 print(e)
                 break
-            
+
             # connect analaysts and report on DB
             try:
                 for analyst in analyst_list:
@@ -337,14 +342,19 @@ def fetch_stock_reports(stock_name, currency="KRW"):
                 print(f"Exception on saving 'Writes': {report} {analyst}")
                 print(e)
                 break
-            
+
             # save negative points on DB
-            point_list = []
-            for neg_point in negative_points:
-                point, _ = Point.objects.get_or_create(
-                    content=neg_point, report=report, is_positive=False
-                )
-                point_list.append(point)
+            try:
+                point_list = []
+                for neg_point in negative_points:
+                    point, _ = Point.objects.get_or_create(
+                        content=neg_point, report=report, is_positive=False
+                    )
+                    point_list.append(point)
+            except Exception as e:
+                print(f"Exception on saving 'Point': {point}")
+                print(e)
+                break
 
             # Print results
             print(f"Saved report: {report}")
