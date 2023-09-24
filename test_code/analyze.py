@@ -14,6 +14,10 @@ load_dotenv()
 
 def analyze(text):
     try:
+
+
+def analyze(text):
+    try:
         openai.api_key = os.getenv("OPENAI_API_KEY")
         messages = [
             {
@@ -107,6 +111,21 @@ def crawl_pdf_link(url):
             print(company_name)
 
         file_tds = soup.find_all("td", class_="file")
+        soup = BeautifulSoup(html, "html.parser")
+
+        # 모든 <tr> 요소를 선택
+        all_tr_elements = soup.find_all("tr")
+
+        # 각 <tr> 요소를 순회하면서 원하는 데이터 추출
+        for tr in all_tr_elements:
+            stock_item = tr.find("a", class_="stock_item").text
+            title = tr.find("td").find("a").text
+            company_name = tr.find_all("td")[2].text
+            print(stock_item)
+            print(title)
+            print(company_name)
+
+        file_tds = soup.find_all("td", class_="file")
         pdf_urls = []
         a_tag = soup.find("a", class_="stock_item")
         title = a_tag["title"]
@@ -114,7 +133,10 @@ def crawl_pdf_link(url):
         for file_td in file_tds:
             a_tag = file_td.find("a")
             pdf_url = a_tag["href"]
+            a_tag = file_td.find("a")
+            pdf_url = a_tag["href"]
             pdf_urls.append(pdf_url)
+        return pdf_urls
         return pdf_urls
     except Exception as e:
         print(e)
