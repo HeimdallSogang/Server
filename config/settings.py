@@ -77,11 +77,11 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # engine: mysql
-        'NAME' : 'sellpoint', # DB Name
-        'USER' : 'admin', # DB User
+        'NAME' : os.getenv("DB_NAME"), # DB Name
+        'USER' : os.getenv("DB_USER"), # DB User
         'PASSWORD' : os.getenv("DB_PASSWORD"), # Password
-        'HOST': 'sellpoint.cw1nejflo0te.us-east-2.rds.amazonaws.com', # 생성한 데이터베이스 엔드포인트
-        'PORT': '3306', # 데이터베이스 포트
+        'HOST': os.getenv("DB_ENDPOINT"), # 생성한 데이터베이스 엔드포인트
+        'PORT': os.getenv("DB_PORT"), # 데이터베이스 포트
         'OPTIONS':{
             'init_command' : "SET sql_mode='STRICT_TRANS_TABLES'"
         }
