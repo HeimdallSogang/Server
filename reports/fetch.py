@@ -38,6 +38,8 @@ def get_stock_code(stock_name):
 
 def text_to_date(date_string):
     # "yy.mm.dd"를 파이썬 날짜 객체로 변경한다.
+    if not date_string:
+        return None
 
     # we assume that '23' refers to 2023.
     date_string = "20" + date_string
@@ -186,7 +188,12 @@ def analayze_with_gpt(text):
 def get_report_detail_info(report_detail_page_url):
     # report_detail_page_url를 스크레이핑해 목표가, sentiment를 tuple에 담아 리턴
 
+    if not report_detail_page_url:
+        return None
+
     response = requests.get(report_detail_page_url)
+    if response.status_code != 200:
+        return None
     soup = BeautifulSoup(response.text, "html.parser")
 
     target_price = None
@@ -195,7 +202,10 @@ def get_report_detail_info(report_detail_page_url):
     money_elem = soup.select_one("em.money")
     if money_elem is not None:
         text = money_elem.text.replace(",", "")  # remove comma
-        target_price = float(text)
+        try:
+            target_price = float(text)
+        except ValueError:
+            return None
 
     comment_elem = soup.select_one("em.coment")  # 'coment' 오타 아님
     if comment_elem is not None:
@@ -259,13 +269,21 @@ def fetch_stock_reports(stock_name, currency="KRW"):
             )
 
             report_title = report_url_elem.text if report_url_elem else None
+            if report_title is None:
+                continue
 
             analyst_company = columns[2].text.strip()
+            if analyst_company is None:
+                continue
 
             file_url_elem = columns[3].find("a")
             report_url = file_url_elem["href"] if file_url_elem else None
+            if report_url is None:
+                continue
 
             publish_date_text = columns[4].text.strip()
+            if len(publish_date_text) == 0:
+                continue
             publish_date = text_to_date(publish_date_text)
 
             # check if report already in DB: report with same title and publish date is considered same report
@@ -279,10 +297,14 @@ def fetch_stock_reports(stock_name, currency="KRW"):
             text_per_page = read_pdf(report_url)
             for text in text_per_page:
                 analysis = analyze(text)
-                for neg_point in analysis["negative thoughts"]:
-                    negative_points.append(neg_point)
-                for analyst in analysis["writer"]:
-                    analyst_names.add(analyst)
+                if not analysis:
+                    continue
+                if "negative thoughts" in analysis:
+                    for neg_point in analysis["negative thoughts"]:
+                        negative_points.append(neg_point)
+                if "writer" in analysis:
+                    for analyst in analysis["writer"]:
+                        analyst_names.add(analyst)
 
             report_detail = get_report_detail_info(report_detail_page_url)
             if report_detail is None:
