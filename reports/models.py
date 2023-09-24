@@ -4,6 +4,7 @@ from django.db import models
 
 
 class Currency(models.Model):
+    #
     code = models.CharField("3 letter representation of a currency(USD)", max_length=3)
     name = models.CharField("Name of currency(dollar)", max_length=50)
 
@@ -28,6 +29,7 @@ class Currency(models.Model):
 
 
 class Stock(models.Model):
+    #명준
     name = models.CharField("Name of the stock", max_length=100)
     code = models.CharField("Code of the stock", max_length=50)
     currency = models.ForeignKey(
