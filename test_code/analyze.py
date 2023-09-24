@@ -12,9 +12,6 @@ import json
 load_dotenv()
 
 
-def analyze(text):
-    try:
-
 
 def analyze(text):
     try:
