@@ -78,6 +78,7 @@ class Report(models.Model):
         "Hidden sentiment (not explicitly mentioned but implied)",
         max_length=4,
         choices=HIDDEN_SENTIMENT_CHOICES,
+        blank=True,
     )
 
     hit_rate = models.FloatField(
