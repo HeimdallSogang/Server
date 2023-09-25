@@ -12,7 +12,6 @@ import json
 load_dotenv()
 
 
-
 def analyze(text):
     try:
         openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -29,9 +28,7 @@ def analyze(text):
                 "role": "system",
                 "content": "If you can't find a value corresponding to the key, set it to empty list and return it",
             },
-            {
-                "role": "user", "content": f"{text}:"
-            },
+            {"role": "user", "content": f"{text}:"},
             {
                 "role": "user",
                 "content": "Find out Negative thoughts in this text, and find names of the writers or analysts if there are(We want only names of Person, not the Company). GIVE IT TO ME IN KOREAN",
@@ -50,8 +47,8 @@ def analyze(text):
     except Exception as e:
         print(e)
         return {
-            "negative thoughts" : [],
-            "writers" : [],
+            "negative thoughts": [],
+            "writers": [],
         }
 
 
