@@ -19,7 +19,11 @@ def analyze(text):
         messages = [
             {
                 "role": "system",
-                "content": "Your role is to analyize this text, extract negative thoughts, writers and respond appropriately to the format.",
+                "content": "Your role is to analyze this text, extract negative thoughts, writers and respond appropriately to the format.",
+            },
+            {
+                "role": "system",
+                "content": "Respond in JSON format with 'negative thoughts' and  'writers' as keys.",
             },
             {
                 "role": "system",
@@ -31,10 +35,6 @@ def analyze(text):
             {
                 "role": "user",
                 "content": "Find out Negative thoughts in this text, and find names of the writers or analysts if there are(We want only names of Person, not the Company). GIVE IT TO ME IN KOREAN",
-            },
-            {
-                "role": "assistant",
-                "content": "Could you give it in JSON format with 'negative thoughts' and  'writers' as keys?",
             },
         ]
 
