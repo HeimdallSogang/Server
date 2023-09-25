@@ -4,7 +4,7 @@ import openai
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-import xml.etree.ElementTree as ET ## XML 데이터 파싱을 위한 패키지
+import xml.etree.ElementTree as ET  ## XML 데이터 파싱을 위한 패키지
 
 from reports.models import Analyst, Currency, Point, Report, Stock, Writes
 from test_code.analyze import read_pdf
@@ -19,15 +19,15 @@ def get_price_on_publish(stock, date):
     stockPriceApiBaseurl = os.getenv("STOCK_PRICE_API_BASE_URL")
 
     params = {
-            "serviceKey": os.getenv("STOCK_PRICE_SERVICE_KEY"),
-            "numOfRows" : "365", ## 검색 일수
-            "itmsNm": stock.name, ## 종목 이름
-            "basDt" : date.strftime('%Y%m%d'), ## 검색 시작 날짜
-        }
-    
+        "serviceKey": os.getenv("STOCK_PRICE_SERVICE_KEY"),
+        "numOfRows": "365",  ## 검색 일수
+        "itmsNm": stock.name,  ## 종목 이름
+        "basDt": date.strftime("%Y%m%d"),  ## 검색 시작 날짜
+    }
+
     ##print(stock.name)
     ##print(date.strftime('%Y%m%d'))
-    
+
     try:
         ## GET 요청 보내기
         response = requests.get(stockPriceApiBaseurl, params=params)
@@ -55,11 +55,11 @@ def get_stock_code(stock_name):
     stockPriceApiBaseurl = os.getenv("STOCK_PRICE_API_BASE_URL")
 
     params = {
-            "serviceKey": os.getenv("STOCK_PRICE_SERVICE_KEY"),
-            "numOfRows" : "1", ## 검색 일수
-            "itmsNm": stock_name, ## 종목 이름
-        }
-    
+        "serviceKey": os.getenv("STOCK_PRICE_SERVICE_KEY"),
+        "numOfRows": "1",  ## 검색 일수
+        "itmsNm": stock_name,  ## 종목 이름
+    }
+
     try:
         ## GET 요청 보내기
         response = requests.get(stockPriceApiBaseurl, params=params)
@@ -89,7 +89,6 @@ def get_stock_code(stock_name):
 
 ## yyyy-mm-dd를 yyyymmdd로 변환
 def date_to_text(date_object):
-
     date_string = date_object.replace("-", "")
     return date_string
 
@@ -283,8 +282,6 @@ def get_report_detail_info(report_detail_page_url):
     return None
 
 
-
-
 def fetch_stock_reports(stock_name, currency="KRW"):
     # Get stock code from stock name
     stock_code = get_stock_code(stock_name)
@@ -450,9 +447,7 @@ def fetch_stock_reports(stock_name, currency="KRW"):
         page_num += 1  # go to next page
 
 
-
 def calculate_hit_rate_of_report():
-
     ## 계산 성공 리포트 수
     calculationSuccess = 0
 
@@ -464,28 +459,29 @@ def calculate_hit_rate_of_report():
     #           "days_to_first_hit" : 0,
     #           "days_to_first_miss" : 0
     #           }
-    
-    reports = Report.objects.filter(
-        hit_rate=None
-    ).order_by("publish_date")
 
-    calculated_reports = Report.objects.filter(
-        hit_rate__gt=0
-    )
+    reports = Report.objects.filter(hit_rate=None).order_by("publish_date")
+
+    calculated_reports = Report.objects.filter(hit_rate__gt=0)
 
     print(f"calculated reports : {len(calculated_reports)}")
     print(f"not-calculated reports : {len(reports)}")
 
     for index, report in enumerate(reports):
-
         print(f"리포트 적중률 계산 중 {index+1}/{len(reports)} \r", end="")
 
         ## 적중률 계산에 필요한 DB 정보
-        hidden_sentiment = -1 if report.hidden_sentiment == "SELL" else 1 ## 리포트에 숨겨진 정보
-        is_newest = report.is_newest          ## 가장 최신 리포트 여부
-        stock_name = report.stock.name      ## 종목 이름
-        search_start_date = report.publish_date.strftime('%Y%m%d')  ## 리포트 발행 일자
-        search_end_date = (report.publish_date + timedelta(days=365)).strftime('%Y%m%d') if is_newest else report.next_publish_date.strftime('%Y%m%d')     ## 리포트 유효기간
+        hidden_sentiment = (
+            -1 if report.hidden_sentiment == "SELL" else 1
+        )  ## 리포트에 숨겨진 정보
+        is_newest = report.is_newest  ## 가장 최신 리포트 여부
+        stock_name = report.stock.name  ## 종목 이름
+        search_start_date = report.publish_date.strftime("%Y%m%d")  ## 리포트 발행 일자
+        search_end_date = (
+            (report.publish_date + timedelta(days=365)).strftime("%Y%m%d")
+            if is_newest
+            else report.next_publish_date.strftime("%Y%m%d")
+        )  ## 리포트 유효기간
 
         # print()
         # print()
@@ -502,20 +498,18 @@ def calculate_hit_rate_of_report():
         # 요청 파라미터 설정
         params = {
             "serviceKey": os.getenv("STOCK_PRICE_SERVICE_KEY"),
-            "numOfRows" : "365", ## 검색 일수
-            "itmsNm": stock_name, ## 종목 이름
-            "beginBasDt" : search_start_date, ## 검색 시작 날짜
-            "endBasDt" : search_end_date    ## 검색 종료 날짜
+            "numOfRows": "365",  ## 검색 일수
+            "itmsNm": stock_name,  ## 종목 이름
+            "beginBasDt": search_start_date,  ## 검색 시작 날짜
+            "endBasDt": search_end_date,  ## 검색 종료 날짜
         }
 
         try:
-
             ## GET 요청 보내기
             response = requests.get(stockPriceApiBaseurl, params=params)
 
             # 응답 확인
             if response.status_code == 200:
-                
                 ## XML로 반환된 데이터의 내용 추출하기 위한 처리
                 xml_data = response.content
                 root = ET.fromstring(xml_data)
@@ -528,10 +522,9 @@ def calculate_hit_rate_of_report():
                 if len(basDt_elements) == 0:
                     continue
 
-
                 ##print(basDt_elements)
 
-                startPrice = int(clpr_elements[len(basDt_elements)-1].text)
+                startPrice = int(clpr_elements[len(basDt_elements) - 1].text)
 
                 ## 지금은 hidden_sentiment가 SELL인 경우를 기준으로 로직 작성
                 days_hit = 0
@@ -542,8 +535,7 @@ def calculate_hit_rate_of_report():
                 ##print(f"startPrice : {startPrice}")
 
                 # clpr 값 출력
-                for i in range(len(basDt_elements)-2, -1, -1):
-
+                for i in range(len(basDt_elements) - 2, -1, -1):
                     basDt_element = basDt_elements[i]
                     clpr_element = clpr_elements[i]
 
@@ -558,7 +550,7 @@ def calculate_hit_rate_of_report():
                         ##priceStatus = "맞음!"
 
                         if days_hit == 0:
-                            days_to_first_hit = len(basDt_elements)-1 - i
+                            days_to_first_hit = len(basDt_elements) - 1 - i
 
                         days_hit += 1
 
@@ -567,10 +559,9 @@ def calculate_hit_rate_of_report():
                         ##priceStatus = "--틀림!"
 
                         if days_missed == 0:
-                            days_to_first_miss= len(basDt_elements)-1 - i
+                            days_to_first_miss = len(basDt_elements) - 1 - i
 
                         days_missed += 1
-
 
                     ##print(f"{basDt_element}의 종가 : {clpr_value} {priceStatus}")
 
@@ -580,7 +571,11 @@ def calculate_hit_rate_of_report():
                 # print(f"days_to_first_hit : {days_to_first_hit}")
                 # print(f"days_to_first_miss : {days_to_first_miss}")
 
-                hit_rate = days_hit / (days_hit + days_missed) if (days_hit + days_missed) else 0
+                hit_rate = (
+                    days_hit / (days_hit + days_missed)
+                    if (days_hit + days_missed)
+                    else 0
+                )
                 report.hit_rate = hit_rate
                 report.days_hit = days_hit
                 report.days_missed = days_missed
@@ -599,8 +594,6 @@ def calculate_hit_rate_of_report():
             else:
                 print("요청 실패:", response.status_code)
 
-
-
         except Exception as e:
             print(e)
 
@@ -609,10 +602,67 @@ def calculate_hit_rate_of_report():
     print(f"{len(reports) - calculationSuccess}개의 리포트 적중률 계산 실패")
 
 
-
 def calculate_hit_rate_of_analyst():
-    
+    calculationSuccess = 0
+
     # analysts = Analyst.objects.all()
     # reports = Report.objects.all()
 
-    pass
+    analysts = set(write.analyst for write in Writes.objects.all())
+
+    for index, analyst in enumerate(analysts):
+        print(f"애널리스트 적중률 계산 중 {index+1}/{len(analysts)} \r", end="")
+
+        reports = [
+            write.report
+            for write in Writes.objects.filter(analyst=analyst)
+            if write.report.hit_rate
+        ]
+
+        days_hit_sum = 0
+        days_missed_sum = 0
+        days_to_first_hit_sum = 0
+        days_to_first_miss_sum = 0
+
+        length = len(reports)
+
+        if length == 0:
+            continue
+
+        for report in reports:
+            days_hit_sum += report.days_hit
+            days_missed_sum += report.days_missed
+            days_to_first_hit_sum += report.days_to_first_hit
+            days_to_first_miss_sum += report.days_to_first_miss
+
+        analyst.hit_rate = (
+            days_hit_sum / (days_hit_sum + days_missed_sum)
+            if (days_hit_sum + days_missed_sum)
+            else 0
+        )
+        analyst.avg_days_hit = days_hit_sum / length
+        analyst.avg_days_missed = days_missed_sum / length
+        analyst.avg_days_to_first_hit = days_to_first_hit_sum / length
+        analyst.avg_days_to_first_miss = days_to_first_miss_sum / length
+
+        # print(f"analyst.hit_rate : {analyst.hit_rate}")
+        # print(f"analyst.avg_days_hit : {analyst.avg_days_hit}")
+        # print(f"analyst.avg_days_missed : {analyst.avg_days_missed}")
+        # print(f"analyst.avg_days_to_first_hit : {analyst.avg_days_to_first_hit}")
+        # print(f"analyst.avg_days_to_first_miss : {analyst.avg_days_to_first_miss}")
+
+        # print()
+        # print()
+
+        # save analysts to DB
+        try:
+            analyst.save()
+            calculationSuccess += 1
+        except Exception as e:
+            print(f"Exception on saving report: {report}")
+            print(e)
+            break
+
+    print(f"{len(analysts)}명의 애널리스트 중..")
+    print(f"{calculationSuccess}명의 애널리스트 적중률 계산 성공!")
+    print(f"{len(analysts) - calculationSuccess}명의 에널리스트 적중률 계산 실패")
