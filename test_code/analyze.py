@@ -12,31 +12,26 @@ import json
 load_dotenv()
 
 
-def analyze_view(text):
+def analyze(text):
     try:
         openai.api_key = os.getenv("OPENAI_API_KEY")
         messages = [
             {
                 "role": "system",
-                "content": "Your role is to analyize this text, extract negative thoughts, and respond appropriately to the format.",
+                "content": "Your role is to analyze this text, extract negative thoughts, writers and respond appropriately to the format.",
             },
             {
                 "role": "system",
-                "content": "목표주가(target price), 작성자(writer) 또는 애널리스트(analyst)가 있다면 찾아줘, 없다면 null로 답을 줘",
+                "content": "Respond in JSON format with 'negative thoughts' and  'writers' as keys.",
             },
-            {"role": "user", "content": "title: "},
+            {
+                "role": "system",
+                "content": "If you can't find a value corresponding to the key, set it to empty list and return it",
+            },
             {"role": "user", "content": f"{text}:"},
             {
                 "role": "user",
-                "content": "Find out Negative thoughts in this text, and find target price, writer or analyst if there are.",
-            },
-            {
-                "role": "assistant",
-                "content": "Could you give it in JSON format with 'negative thoughts' and 'target price' and 'writer' as keys?",
-            },
-            {
-                "role": "assistant",
-                "content": "If you can't find a value corresponding to the key, set it to null and return it",
+                "content": "Find out Negative thoughts in this text, and find names of the writers or analysts if there are(We want only names of Person, not the Company). GIVE IT TO ME IN KOREAN",
             },
         ]
 
@@ -47,10 +42,14 @@ def analyze_view(text):
             temperature=0,
         )
         answer = response["choices"][0]["message"]["content"]
-        return answer
+        print(answer)
+        return json.loads(answer)
     except Exception as e:
         print(e)
-        return ""
+        return {
+            "negative thoughts": [],
+            "writers": [],
+        }
 
 
 def preprocessing(page_text):
@@ -106,6 +105,21 @@ def crawl_pdf_link(url):
             print(company_name)
 
         file_tds = soup.find_all("td", class_="file")
+        soup = BeautifulSoup(html, "html.parser")
+
+        # 모든 <tr> 요소를 선택
+        all_tr_elements = soup.find_all("tr")
+
+        # 각 <tr> 요소를 순회하면서 원하는 데이터 추출
+        for tr in all_tr_elements:
+            stock_item = tr.find("a", class_="stock_item").text
+            title = tr.find("td").find("a").text
+            company_name = tr.find_all("td")[2].text
+            print(stock_item)
+            print(title)
+            print(company_name)
+
+        file_tds = soup.find_all("td", class_="file")
         pdf_urls = []
         a_tag = soup.find("a", class_="stock_item")
         title = a_tag["title"]
@@ -113,7 +127,10 @@ def crawl_pdf_link(url):
         for file_td in file_tds:
             a_tag = file_td.find("a")
             pdf_url = a_tag["href"]
+            a_tag = file_td.find("a")
+            pdf_url = a_tag["href"]
             pdf_urls.append(pdf_url)
+        return pdf_urls
         return pdf_urls
     except Exception as e:
         print(e)
@@ -127,13 +144,15 @@ if __name__ == "__main__":
         pdf_urls = crawl_pdf_link(url)
         for pdf_url in pdf_urls:
             print(pdf_url)
+            pdf_url = "https://ssl.pstatic.net/imgstock/upload/research/company/1695343870257.pdf"
             text_list = read_pdf(pdf_url)
             for text in text_list:
-                print(text + "\n\n\n\n")
+                print(text)
                 try:
-                    result = analyze_view(text)
+                    result = analyze(text)
                     result = json.loads(result)
                     print(result)
+                    print("\n\n\n\n")
                 except Exception as e:
                     print(e)
                 break
