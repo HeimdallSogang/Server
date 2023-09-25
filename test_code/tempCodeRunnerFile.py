@@ -1,4 +1,2 @@
-response = urllib.request.urlopen(url)
-
-
-# print(response.status_code)
+xception as e:
+        print(e)

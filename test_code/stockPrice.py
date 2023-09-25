@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import os
 import requests
 import xml.etree.ElementTree as ET ## XML 데이터 파싱을 위한 패키지
-from reports.models import *
+##from reports.models import *
 
 load_dotenv()
 
@@ -20,8 +20,7 @@ def calculate_hit_rate_of_report():
     beginBasDt = "20230807"   ## 리포트 발행 일자
     endBasDt = "20230924"     ## 리포트 유효기간
 
-
-    stockPriceApiBaseurl = "http://apis.data.go.kr/1160100/service/GetStockSecuritiesInfoService/getStockPriceInfo"
+    stockPriceApiBaseurl = os.getenv("STOCK_PRICE_API_BASE_URL")
 
     ## 리포트가 가장 최신인 경우 : 유효기간은 1년으로 설정
     if is_newest:
