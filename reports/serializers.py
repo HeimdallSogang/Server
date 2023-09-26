@@ -14,8 +14,6 @@ class ReportSerializer(serializers.ModelSerializer):
         model = Report
         fields = '__all__'
 
-
-
 class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
@@ -26,7 +24,6 @@ class PointSerializer(serializers.ModelSerializer):
     class Meta:
         model = Point
         fields = '__all__'
-
 
 
 class WritesSerializer(serializers.ModelSerializer):

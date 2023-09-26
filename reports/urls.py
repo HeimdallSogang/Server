@@ -10,6 +10,8 @@ router.register(r"stock", StockViewSet)
 router.register(r"point", PointViewSet)
 router.register(r"writes", WritesViewSet)
 
+
 urlpatterns = [
+    path("report/by_stock/<int:stock_id>/", ReportViewSet.as_view({'get': 'list'}), name='filtered-reports-by-stock'),
     path("", include(router.urls)),
 ]
