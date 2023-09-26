@@ -18,11 +18,11 @@ def analyze(text):
         messages = [
             {
                 "role": "system",
-                "content": "Your role is to analyze this text, extract negative thoughts, writers and respond appropriately to the format.",
+                "content": "Your role is to analyze this stock analysis, find out reasons to sell this stock, find out writers and respond appropriately to the format",
             },
             {
                 "role": "system",
-                "content": "Respond in JSON format with 'negative thoughts' and  'writers' as keys.",
+                "content": "Respond in JSON format with 'reasons' and  'writers' as keys.",
             },
             {
                 "role": "system",
@@ -30,8 +30,12 @@ def analyze(text):
             },
             {"role": "user", "content": f"{text}:"},
             {
-                "role": "user",
-                "content": "Find out Negative thoughts in this text, and find names of the writers or analysts if there are(We want only names of Person, not the Company). GIVE IT TO ME IN KOREAN",
+                "role": "assistant",
+                "content": "We only want people's names, not company names, for values of writer.",
+            },
+            {
+                "role": "assistant",
+                "content": "Answer in Korean",
             },
         ]
 
@@ -43,11 +47,19 @@ def analyze(text):
         )
         answer = response["choices"][0]["message"]["content"]
         print(answer)
-        return json.loads(answer)
+        result = json.loads(answer)
+        if 'reasons' in result and 'writers' in result:
+            if isinstance(result['reasons'], list) and isinstance(result['writers'], list):
+                return json.loads(answer)
+        print("fail")
+        return {
+            "reasons": [],
+            "writers": [],
+        }
     except Exception as e:
         print(e)
         return {
-            "negative thoughts": [],
+            "reasons": [],
             "writers": [],
         }
 
@@ -131,7 +143,6 @@ def crawl_pdf_link(url):
             pdf_url = a_tag["href"]
             pdf_urls.append(pdf_url)
         return pdf_urls
-        return pdf_urls
     except Exception as e:
         print(e)
         return ""
@@ -150,7 +161,6 @@ if __name__ == "__main__":
                 print(text)
                 try:
                     result = analyze(text)
-                    result = json.loads(result)
                     print(result)
                     print("\n\n\n\n")
                 except Exception as e:
@@ -158,3 +168,15 @@ if __name__ == "__main__":
                 break
             break
         break
+
+
+pdf_url = "https://ssl.pstatic.net/imgstock/upload/research/company/1695343870257.pdf"
+text_list = read_pdf(pdf_url)
+for text in text_list:
+    print(text)
+    try:
+        result = analyze(text)
+        print(result)
+        print("\n\n\n\n")
+    except Exception as e:
+        print(e)
