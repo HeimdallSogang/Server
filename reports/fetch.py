@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 
 from reports.models import Analyst, Currency, Point, Report, Stock, Writes
-from test_code.analyze import read_pdf
+from test_code.analyze import analyze, read_pdf
 
 
 def get_price_on_publish(stock, date):
@@ -46,24 +46,6 @@ def text_to_date(date_string):
     date_object = datetime.strptime(date_string, "%Y.%m.%d").date()
 
     return date_object
-
-
-def analyze(text):
-    # TODO: analyze_with_gpt() 도입
-    # 정확한 형식을 지켜내는지, 답변 수준이 높은지, 답변이 정확한지 확인 필요
-
-    return {
-        "negative thoughts": [
-            "부정 의견 1",
-            "부정 의견 2",
-        ],
-        "writer": [
-            "김이름",
-            "홍길동",
-        ],
-    }
-
-    # return analayze_with_gpt(text)
 
 
 def get_hidden_sentiment(report, analysts):
@@ -302,8 +284,8 @@ def fetch_stock_reports(stock_name, currency="KRW"):
                 if "negative thoughts" in analysis:
                     for neg_point in analysis["negative thoughts"]:
                         negative_points.append(neg_point)
-                if "writer" in analysis:
-                    for analyst in analysis["writer"]:
+                if "writers" in analysis:
+                    for analyst in analysis["writers"]:
                         analyst_names.add(analyst)
 
             report_detail = get_report_detail_info(report_detail_page_url)
