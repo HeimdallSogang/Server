@@ -3,37 +3,95 @@ import os
 import openai
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
+import xml.etree.ElementTree as ET  ## XML 데이터 파싱을 위한 패키지
+from django.db.models import Count, Sum
 
 from reports.models import Analyst, Currency, Point, Report, Stock, Writes
-from test_code.analyze import read_pdf
+from test_code.analyze import analyze, read_pdf
 
 
+## stock : 주식 이름
+## date : 원하는 날짜 (string type)
 def get_price_on_publish(stock, date):
     # TODO: 어떤 주식이 어떤 날에 마감가가 얼마였는지 리턴
     # stock.name이나 stock.code가 채워져있을 것을 요구
 
-    return 48000
+    stockPriceApiBaseurl = os.getenv("STOCK_PRICE_API_BASE_URL")
+
+    params = {
+        "serviceKey": os.getenv("STOCK_PRICE_SERVICE_KEY"),
+        "numOfRows": "365",  ## 검색 일수
+        "itmsNm": stock.name,  ## 종목 이름
+        "basDt": date.strftime("%Y%m%d"),  ## 검색 시작 날짜
+    }
+
+    ##print(stock.name)
+    ##print(date.strftime('%Y%m%d'))
+
+    try:
+        ## GET 요청 보내기
+        response = requests.get(stockPriceApiBaseurl, params=params)
+
+        ## XML로 반환된 데이터의 내용 추출하기 위한 처리
+        xml_data = response.content
+        root = ET.fromstring(xml_data)
+
+        # clpr(종가) 요소 추출
+        price = root.find(".//clpr")
+        price = price.text
+
+        return price
+
+    except Exception as e:
+        print(f"너가 마주한 에러 : {e}")
+        return None
 
 
+## parameter : 주식 이름 (String type)
+## return value : 주식 번호 (String type)
 def get_stock_code(stock_name):
     # TODO: 공개된 API 등 이용해서 stock name -> stock code 변환 실행
 
-    conversion = {
-        "삼성전자": "005930",
-        "카카오": "035720",
-        "현대차": "005380",
-        "현대자동차": "005380",
-        "네이버": "035420",
-        "NAVER": "035420",
-        "SK하이닉스": "000660",
+    stockPriceApiBaseurl = os.getenv("STOCK_PRICE_API_BASE_URL")
+
+    params = {
+        "serviceKey": os.getenv("STOCK_PRICE_SERVICE_KEY"),
+        "numOfRows": "1",  ## 검색 일수
+        "itmsNm": stock_name,  ## 종목 이름
     }
+
     try:
-        stock_code = conversion[stock_name]
+        ## GET 요청 보내기
+        response = requests.get(stockPriceApiBaseurl, params=params)
+
+        ## XML로 반환된 데이터의 내용 추출하기 위한 처리
+        xml_data = response.content
+        root = ET.fromstring(xml_data)
+
+        # srtnCd(주식 번호) 요소 추출
+        stock_code = root.find(".//srtnCd").text
+
+        return stock_code
+
     except Exception as e:
+        print(f"Error : {e}")
         return None
 
-    return stock_code
+    # conversion = {
+    #     "삼성전자": "005930",
+    #     "카카오": "035720",
+    #     "현대차": "005380",
+    #     "현대자동차": "005380",
+    #     "NAVER": "035420",
+    #     "SK하이닉스": "000660",
+    # }
+
+
+## yyyy-mm-dd를 yyyymmdd로 변환
+def date_to_text(date_object):
+    date_string = date_object.replace("-", "")
+    return date_string
 
 
 def text_to_date(date_string):
@@ -46,24 +104,6 @@ def text_to_date(date_string):
     date_object = datetime.strptime(date_string, "%Y.%m.%d").date()
 
     return date_object
-
-
-def analyze(text):
-    # TODO: analyze_with_gpt() 도입
-    # 정확한 형식을 지켜내는지, 답변 수준이 높은지, 답변이 정확한지 확인 필요
-
-    return {
-        "negative thoughts": [
-            "부정 의견 1",
-            "부정 의견 2",
-        ],
-        "writer": [
-            "김이름",
-            "홍길동",
-        ],
-    }
-
-    # return analayze_with_gpt(text)
 
 
 def get_hidden_sentiment(report, analysts):
@@ -146,43 +186,6 @@ def get_next_publish_date(report, analysts):
         return next_report.publish_date
     else:
         return None
-
-
-def analayze_with_gpt(text):
-    # text -> GPT -> dict with keys: negative thoughts, analysts
-    try:
-        openai.api_key = os.getenv("OPENAI_API_KEY")
-        messages = [
-            {
-                "role": "system",
-                "content": "You will be provided some text from a stock report. Your task is to analyze this text, find out the name (or names) of the analyst wrote this report, extract negative thoughts, and respond appropriately to the format.",
-            },
-            {
-                "role": "system",
-                "content": "You should answer in JSON, with 'analysts' and 'negative thoughts' as keys. Values of each key should be a list of strings.",
-            },
-            {
-                "role": "system",
-                "content": "If the provided text does not contain the information needed, then set null as the value.",
-            },
-            {"role": "user", "content": f"{text}:"},
-            {
-                "role": "user",
-                "content": "In the given text, find out negative thoughts, and names of analysts if provided.",
-            },
-        ]
-
-        answer = ""
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            temperature=0,
-        )
-        answer = response["choices"][0]["message"]["content"]
-        return answer
-    except Exception as e:
-        print(e)
-        return ""
 
 
 def get_report_detail_info(report_detail_page_url):
@@ -301,7 +304,6 @@ def fetch_stock_reports(stock_name, currency="KRW"):
                     negative_points.append(neg_point)
                 for analyst in analysis["writers"]:
                     analyst_names.add(analyst)
-
             report_detail = get_report_detail_info(report_detail_page_url)
             if report_detail is None:
                 break
@@ -384,3 +386,261 @@ def fetch_stock_reports(stock_name, currency="KRW"):
             break
 
         page_num += 1  # go to next page
+
+
+def calculate_hit_rate_of_report():
+    ## 계산 성공 리포트 수
+    calculationSuccess = 0
+
+    # hidden_sentiment_db, is_newest, stock_name, publish_date, next_publish_date
+
+    # result = {"hit_rate" : 0,
+    #           "days_hit" : 0,
+    #           "days_missed" : 0,
+    #           "days_to_first_hit" : 0,
+    #           "days_to_first_miss" : 0
+    #           }
+
+    reports = Report.objects.filter(hit_rate=None).order_by("publish_date")
+
+    ##calculated_reports = Report.objects.filter(hit_rate__gt=0)
+    calculated_reports_length = Report.objects.filter(hit_rate__gt=0).count()
+
+    ##print(f"calculated reports : {len(calculated_reports)}")
+    print(f"calculated reports : {calculated_reports_length}")
+    print(f"not-calculated reports : {len(reports)}")
+
+    for index, report in enumerate(reports):
+        print(f"리포트 적중률 계산 중 {index+1}/{len(reports)} \r", end="")
+
+        ## 적중률 계산에 필요한 DB 정보
+        hidden_sentiment = (
+            -1 if report.hidden_sentiment == "SELL" else 1
+        )  ## 리포트에 숨겨진 정보
+        is_newest = report.is_newest  ## 가장 최신 리포트 여부
+        stock_name = report.stock.name  ## 종목 이름
+        search_start_date = report.publish_date.strftime("%Y%m%d")  ## 리포트 발행 일자
+        search_end_date = (
+            (report.publish_date + timedelta(days=365)).strftime("%Y%m%d")
+            if is_newest
+            else report.next_publish_date.strftime("%Y%m%d")
+        )  ## 리포트 유효기간
+
+        # print()
+        # print()
+        # print(f"hidden_sentiment : {hidden_sentiment}")
+        # print(f"is_newest : {is_newest}")
+        # print(f"itmsNm : {stock_name}")
+        # print(f"beginBasDt : {search_start_date}")
+        # print(f"endBasDt : {search_end_date}")
+
+        # continue
+
+        stockPriceApiBaseurl = os.getenv("STOCK_PRICE_API_BASE_URL")
+
+        # 요청 파라미터 설정
+        params = {
+            "serviceKey": os.getenv("STOCK_PRICE_SERVICE_KEY"),
+            "numOfRows": "365",  ## 검색 일수
+            "itmsNm": stock_name,  ## 종목 이름
+            "beginBasDt": search_start_date,  ## 검색 시작 날짜
+            "endBasDt": search_end_date,  ## 검색 종료 날짜
+        }
+
+        try:
+            ## GET 요청 보내기
+            response = requests.get(stockPriceApiBaseurl, params=params)
+
+            # 응답 확인
+            if response.status_code == 200:
+                ## XML로 반환된 데이터의 내용 추출하기 위한 처리
+                xml_data = response.content
+                root = ET.fromstring(xml_data)
+
+                # clpr(종가) 요소 추출
+                basDt_elements = root.findall(".//basDt")
+                clpr_elements = root.findall(".//clpr")
+
+                ## 금융위원회 주식시세 ap는 2020년까지의 주식 데이터밖에 없으므로 이 이전은 아직은 빼놓는다.
+                if len(basDt_elements) == 0:
+                    continue
+
+                ##print(basDt_elements)
+
+                startPrice = int(clpr_elements[len(basDt_elements) - 1].text)
+
+                ## 지금은 hidden_sentiment가 SELL인 경우를 기준으로 로직 작성
+                days_hit = 0
+                days_missed = 0
+                days_to_first_hit = 0
+                days_to_first_miss = 0
+
+                ##print(f"startPrice : {startPrice}")
+
+                # clpr 값 출력
+                for i in range(len(basDt_elements) - 2, -1, -1):
+                    basDt_element = basDt_elements[i]
+                    clpr_element = clpr_elements[i]
+
+                    basDt_element = basDt_element.text
+                    clpr_value = int(clpr_element.text)
+
+                    ## 변화값 부호 * hidden_sentiment : 양수면 hit, 음수면 miss
+                    variance = (clpr_value - startPrice) * hidden_sentiment
+
+                    ## 맞췄을 경우
+                    if variance > 0:
+                        ##priceStatus = "맞음!"
+
+                        if days_hit == 0:
+                            days_to_first_hit = len(basDt_elements) - 1 - i
+
+                        days_hit += 1
+
+                    ## 틀렸을 경우
+                    else:
+                        ##priceStatus = "--틀림!"
+
+                        if days_missed == 0:
+                            days_to_first_miss = len(basDt_elements) - 1 - i
+
+                        days_missed += 1
+
+                    ##print(f"{basDt_element}의 종가 : {clpr_value} {priceStatus}")
+
+                # print(f"hit_rate : {days_hit / (days_hit + days_missed)}")
+                # print(f"days_hit : {days_hit}")
+                # print(f"days_missed : {days_missed}")
+                # print(f"days_to_first_hit : {days_to_first_hit}")
+                # print(f"days_to_first_miss : {days_to_first_miss}")
+
+                hit_rate = (
+                    days_hit / (days_hit + days_missed)
+                    if (days_hit + days_missed)
+                    else 0
+                )
+                report.hit_rate = hit_rate
+                report.days_hit = days_hit
+                report.days_missed = days_missed
+                report.days_to_first_hit = days_to_first_hit
+                report.days_to_first_miss = days_to_first_miss
+
+                # save report to DB
+                try:
+                    report.save()
+                    calculationSuccess += 1
+                except Exception as e:
+                    print(f"Exception on saving report: {report}")
+                    print(e)
+                    break
+
+            else:
+                print("요청 실패:", response.status_code)
+
+        except Exception as e:
+            print(e)
+
+    print(f"{len(reports)} 개의 리포트 중..")
+    print(f"{calculationSuccess}개의 리포트 적중률 계산 성공!")
+    print(f"{len(reports) - calculationSuccess}개의 리포트 적중률 계산 실패")
+
+
+def calculate_hit_rate_of_analyst():
+    calculationSuccess = 0
+
+    # analysts = Analyst.objects.all()
+    # reports = Report.objects.all()
+
+    analysts = set(write.analyst for write in Writes.objects.all())
+
+    for index, analyst in enumerate(analysts):
+        print(f"애널리스트 적중률 계산 중 {index+1}/{len(analysts)} \r", end="")
+
+        # reports = [
+        #     write.report
+        #     for write in Writes.objects.filter(analyst=analyst)
+        #     if write.report.hit_rate
+        # ]
+
+        analyst_write_instances = Writes.objects.filter(
+            analyst=analyst
+        )  # analyst와 연관된 Writes 뽑기
+        reports = Report.objects.filter(
+            writes__in=analyst_write_instances
+        )  # analyst_write_instances와 연관된 Report 뽑기
+
+        # days_hit_sum = 0
+        # days_missed_sum = 0
+        # days_to_first_hit_sum = 0
+        # days_to_first_miss_sum = 0
+
+        length = len(reports)
+
+        # if length == 0:
+        #     continue
+
+        # for report in reports:
+        #     days_hit_sum += report.days_hit
+        #     days_missed_sum += report.days_missed
+        #     days_to_first_hit_sum += report.days_to_first_hit
+        #     days_to_first_miss_sum += report.days_to_first_miss
+
+        total = reports.aggregate(
+            total_days_hit=Sum("days_hit"),
+            total_days_missed=Sum("days_missed"),
+            total_days_to_first_hit=Sum("days_to_first_hit"),
+            total_days_to_first_miss=Sum("days_to_first_miss"),
+        )
+
+        days_hit_sum = total["total_days_hit"]
+        days_missed_sum = total["total_days_missed"]
+        days_to_first_hit_sum = total["total_days_to_first_hit"]
+        days_to_first_miss_sum = total["total_days_to_first_miss"]
+
+        if not (
+            days_hit_sum
+            and days_missed_sum
+            and days_to_first_hit_sum
+            and days_to_first_miss_sum
+        ):
+            continue
+
+        print(f"days_hit_sum : {days_hit_sum}")
+        print(f"days_missed_sum : {days_missed_sum}")
+        print(f"days_to_first_hit_sum : {days_to_first_hit_sum}")
+        print(f"days_to_first_miss_sum : {days_to_first_miss_sum}")
+
+        print()
+        print()
+
+        analyst.hit_rate = (
+            days_hit_sum / (days_hit_sum + days_missed_sum)
+            if (days_hit_sum + days_missed_sum)
+            else 0
+        )
+        analyst.avg_days_hit = days_hit_sum / length
+        analyst.avg_days_missed = days_missed_sum / length
+        analyst.avg_days_to_first_hit = days_to_first_hit_sum / length
+        analyst.avg_days_to_first_miss = days_to_first_miss_sum / length
+
+        # print(f"analyst.hit_rate : {analyst.hit_rate}")
+        # print(f"analyst.avg_days_hit : {analyst.avg_days_hit}")
+        # print(f"analyst.avg_days_missed : {analyst.avg_days_missed}")
+        # print(f"analyst.avg_days_to_first_hit : {analyst.avg_days_to_first_hit}")
+        # print(f"analyst.avg_days_to_first_miss : {analyst.avg_days_to_first_miss}")
+
+        # print()
+        # print()
+
+        # save analysts to DB
+        try:
+            analyst.save()
+            calculationSuccess += 1
+        except Exception as e:
+            print(f"Exception on saving report: {report}")
+            print(e)
+            break
+
+    print(f"{len(analysts)}명의 애널리스트 중..")
+    print(f"{calculationSuccess}명의 애널리스트 적중률 계산 성공!")
+    print(f"{len(analysts) - calculationSuccess}명의 에널리스트 적중률 계산 실패")
