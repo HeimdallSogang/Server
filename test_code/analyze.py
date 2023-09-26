@@ -18,25 +18,43 @@ def analyze(text):
         messages = [
             {
                 "role": "system",
-                "content": "Your role is to analyze this stock analysis, find out reasons to sell this stock, find out writers and respond appropriately to the format",
+                "content": 
+                """
+                    If you can't find a value corresponding to the key, set it to empty list and return it
+                    The credibility of the reason is the most important.
+                    Use only the provided text.
+                    Respond in JSON format with 'reasons' and  'writers' and 'companies' as keys.
+                    Answer in Korean
+                """,
             },
             {
-                "role": "system",
-                "content": "Respond in JSON format with 'reasons' and  'writers' as keys.",
+                "role": "user", "content": f"{text}:"
             },
             {
-                "role": "system",
-                "content": "If you can't find a value corresponding to the key, set it to empty list and return it",
+                "role": "user",
+                "content": 
+                """
+                    Analyze this stock analysis.
+                    Find out reasons to sell this stock.
+                    Find out writers of this report, not the company they are working for.
+                    Find out companies.
+                    Respond appropriately to the format
+                """,
             },
-            {"role": "user", "content": f"{text}:"},
             {
                 "role": "assistant",
-                "content": "We only want people's names, not company names, for values of writer.",
-            },
-            {
-                "role": "assistant",
-                "content": "Answer in Korean",
-            },
+                "content":
+                """
+                    {
+                        "reasons": [
+                        ],
+                        "writers": [
+                        ]
+                        "companies": [
+                        ]
+                    }
+                """
+            }
         ]
 
         answer = ""
