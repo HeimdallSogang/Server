@@ -130,43 +130,6 @@ def get_next_publish_date(report, analysts):
         return None
 
 
-def analayze_with_gpt(text):
-    # text -> GPT -> dict with keys: negative thoughts, analysts
-    try:
-        openai.api_key = os.getenv("OPENAI_API_KEY")
-        messages = [
-            {
-                "role": "system",
-                "content": "You will be provided some text from a stock report. Your task is to analyze this text, find out the name (or names) of the analyst wrote this report, extract negative thoughts, and respond appropriately to the format.",
-            },
-            {
-                "role": "system",
-                "content": "You should answer in JSON, with 'analysts' and 'negative thoughts' as keys. Values of each key should be a list of strings.",
-            },
-            {
-                "role": "system",
-                "content": "If the provided text does not contain the information needed, then set null as the value.",
-            },
-            {"role": "user", "content": f"{text}:"},
-            {
-                "role": "user",
-                "content": "In the given text, find out negative thoughts, and names of analysts if provided.",
-            },
-        ]
-
-        answer = ""
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            temperature=0,
-        )
-        answer = response["choices"][0]["message"]["content"]
-        return answer
-    except Exception as e:
-        print(e)
-        return ""
-
-
 def get_report_detail_info(report_detail_page_url):
     # report_detail_page_url를 스크레이핑해 목표가, sentiment를 tuple에 담아 리턴
 
