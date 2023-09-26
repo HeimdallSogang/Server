@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET  ## XML 데이터 파싱을 위한 패키지
 from django.db.models import Count, Sum
 
 from reports.models import Analyst, Currency, Point, Report, Stock, Writes
-from test_code.analyze import read_pdf
+from test_code.analyze import analyze, read_pdf
 
 
 ## stock : 주식 이름
@@ -106,24 +106,6 @@ def text_to_date(date_string):
     return date_object
 
 
-def analyze(text):
-    # TODO: analyze_with_gpt() 도입
-    # 정확한 형식을 지켜내는지, 답변 수준이 높은지, 답변이 정확한지 확인 필요
-
-    return {
-        "negative thoughts": [
-            "부정 의견 1",
-            "부정 의견 2",
-        ],
-        "writer": [
-            "김이름",
-            "홍길동",
-        ],
-    }
-
-    # return analayze_with_gpt(text)
-
-
 def get_hidden_sentiment(report, analysts):
     # 리포트와 리포트를 쓴 애널리스트의 목록을 받아 같은 종목에 관해 같은 애널리스트들이 쓴 가장 가까운 과거의 리포트를 찾아 목표가를 비교한다.
     # 목표가가 하향됐으면 'SELL', 유지 또는 상향됐으면 'BUY'로 설정한다.
@@ -204,43 +186,6 @@ def get_next_publish_date(report, analysts):
         return next_report.publish_date
     else:
         return None
-
-
-def analayze_with_gpt(text):
-    # text -> GPT -> dict with keys: negative thoughts, analysts
-    try:
-        openai.api_key = os.getenv("OPENAI_API_KEY")
-        messages = [
-            {
-                "role": "system",
-                "content": "You will be provided some text from a stock report. Your task is to analyze this text, find out the name (or names) of the analyst wrote this report, extract negative thoughts, and respond appropriately to the format.",
-            },
-            {
-                "role": "system",
-                "content": "You should answer in JSON, with 'analysts' and 'negative thoughts' as keys. Values of each key should be a list of strings.",
-            },
-            {
-                "role": "system",
-                "content": "If the provided text does not contain the information needed, then set null as the value.",
-            },
-            {"role": "user", "content": f"{text}:"},
-            {
-                "role": "user",
-                "content": "In the given text, find out negative thoughts, and names of analysts if provided.",
-            },
-        ]
-
-        answer = ""
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            temperature=0,
-        )
-        answer = response["choices"][0]["message"]["content"]
-        return answer
-    except Exception as e:
-        print(e)
-        return ""
 
 
 def get_report_detail_info(report_detail_page_url):
@@ -360,8 +305,8 @@ def fetch_stock_reports(stock_name, currency="KRW"):
                 if "negative thoughts" in analysis:
                     for neg_point in analysis["negative thoughts"]:
                         negative_points.append(neg_point)
-                if "writer" in analysis:
-                    for analyst in analysis["writer"]:
+                if "writers" in analysis:
+                    for analyst in analysis["writers"]:
                         analyst_names.add(analyst)
 
             report_detail = get_report_detail_info(report_detail_page_url)
