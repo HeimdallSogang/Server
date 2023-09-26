@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET  ## XML 데이터 파싱을 위한 패키지
+from django.db.models import Count
 
 from reports.models import Analyst, Currency, Point, Report, Stock, Writes
 from test_code.analyze import read_pdf
@@ -462,9 +463,11 @@ def calculate_hit_rate_of_report():
 
     reports = Report.objects.filter(hit_rate=None).order_by("publish_date")
 
-    calculated_reports = Report.objects.filter(hit_rate__gt=0)
+    ##calculated_reports = Report.objects.filter(hit_rate__gt=0)
+    calculated_reports_length = Report.objects.filter(hit_rate__gt=0).count()
 
-    print(f"calculated reports : {len(calculated_reports)}")
+    ##print(f"calculated reports : {len(calculated_reports)}")
+    print(f"calculated reports : {calculated_reports_length}")
     print(f"not-calculated reports : {len(reports)}")
 
     for index, report in enumerate(reports):
