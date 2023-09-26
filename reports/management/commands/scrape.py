@@ -1,6 +1,10 @@
 from pathlib import Path
 from django.core.management.base import BaseCommand, CommandError
-from reports.fetch import fetch_stock_reports, calculate_hit_rate_of_report, calculate_hit_rate_of_analyst
+from reports.fetch import (
+    fetch_stock_reports,
+    calculate_hit_rate_of_report,
+    calculate_hit_rate_of_analyst,
+)
 from reports.models import Report
 
 
@@ -22,11 +26,11 @@ class Command(BaseCommand):
             help="List of stock names to scrape with spaces in between(ex. 삼성전자 카카오)",
         )
         parser.add_argument(
-                "-c",
-                "--calculate",
-                nargs="+",
-                type=str,
-                help="List of stock names to scrape with spaces in between(ex. 삼성전자 카카오)",
+            "-c",
+            "--calculate",
+            nargs="+",
+            type=str,
+            help="Type either report or analyst that needs to be calculated",
         )
 
     def handle(self, *args, **options):
@@ -52,15 +56,12 @@ class Command(BaseCommand):
             for stock_name in stocks:
                 fetch_stock_reports(stock_name)
 
-
         elif calculate:
-
             if calculate[0] == "report":
                 calculate_hit_rate_of_report()
 
             elif calculate[0] == "analyst":
                 calculate_hit_rate_of_analyst()
-        
 
         else:
             raise CommandError("Provide one of --file, --stocks, --calculate argument.")
