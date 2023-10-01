@@ -8,4 +8,5 @@ router.register(r'analyst', AnalystViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('<int:pk>/reports/', AnalystReportsView.as_view(), name='analyst-reports'),
 ]
