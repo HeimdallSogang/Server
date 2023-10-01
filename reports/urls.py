@@ -4,12 +4,12 @@ from .views import *
 
 router = DefaultRouter()
 
-router.register(r"currency", CurrencyViewSet)
-router.register(r"report", ReportViewSet)
 router.register(r"stock", StockViewSet)
 router.register(r"point", PointViewSet)
 router.register(r"writes", WritesViewSet)
 
+
 urlpatterns = [
     path("", include(router.urls)),
+    path('stocks/<int:pk>/reports/', StockReportsView.as_view(), name='stock-reports'),
 ]
