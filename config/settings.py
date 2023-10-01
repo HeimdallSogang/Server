@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "reports",
     "analysts",
     "django_filters",
+    "stocks",
 ]
 
 MIDDLEWARE = [
