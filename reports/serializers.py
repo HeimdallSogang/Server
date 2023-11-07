@@ -126,3 +126,9 @@ class AnalystReportSerializer(serializers.ModelSerializer):
     ## 주식 이름 추출
     def get_stock_name(self, obj):
         return obj.stock.name
+
+
+class ReportPointSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Point
+        fields = ["content"]

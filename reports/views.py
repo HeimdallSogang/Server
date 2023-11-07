@@ -9,6 +9,7 @@ from reports.serializers import (
     WritesSerializer,
     StockReportSerializer,  ## 종목 검색 페이지를 위한 API용 시리얼라이저
     AnalystReportSerializer,  ## 애널리스트 검색 페이지를 위한 API용 시리얼라이저
+    ReportPointSerializer,  ## 해당 종목리포트의 모든 부정포인트 반환 API용 시리얼라이저
 )
 from reports.models import Point, Report, Stock, Writes
 from analysts.pagination import CustomPageNumberPagination
@@ -35,7 +36,7 @@ class StockReportFilter(filters.FilterSet):
         return queryset.filter(min_hit_rate__gte=value)
 
 
-## http GET /stocks/주식_ID/reports/
+## http GET /stocks/:stock_ID/reports/
 class StockReportsView(generics.ListAPIView):
     serializer_class = StockReportSerializer
     filter_backends = [filters.DjangoFilterBackend, drf_filters.OrderingFilter]
@@ -62,7 +63,7 @@ class AnalystReportFilter(filters.FilterSet):
         fields = ["publish_date", "sentiment", "stock_id"]
 
 
-## http GET /analysts/애널_ID/reports/
+## http GET /analysts/:analyst_id/reports/
 class AnalystReportsView(generics.ListAPIView):
     serializer_class = AnalystReportSerializer
     filter_backends = [filters.DjangoFilterBackend, drf_filters.OrderingFilter]
@@ -84,6 +85,16 @@ class StockViewSet(viewsets.ReadOnlyModelViewSet):
 class PointViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Point.objects.all()
     serializer_class = PointSerializer
+
+
+## http GET /reports/:report_ID/points
+class ReportPointView(generics.ListAPIView):
+    serializer_class = ReportPointSerializer
+
+    def get_queryset(self):
+        report_id = self.kwargs["report_id"]
+        points = Point.objects.filter(report=report_id)
+        return points
 
 
 class WritesViewSet(viewsets.ReadOnlyModelViewSet):
