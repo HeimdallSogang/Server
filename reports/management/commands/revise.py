@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
+from reports.fetch import calculate_hit_rate_of_single_analyst
 
 from reports.models import Analyst, Point, Report, Writes
 from test_code.analyze import analyze, read_pdf
@@ -219,16 +220,9 @@ class Command(BaseCommand):
             # update hit rate, average something fields for wrong and new analysts
             update_needed_analysts = wrong_analysts + new_analysts
             for an in update_needed_analysts:
-                # an의 통계 업데이트
-
-                # temp
-                an.avg_days_hit = 424242
-                # end of temp
-                try: 
-                    an.save()
-                except Exception as e:
+                # 애널리스트 an의 통계 업데이트
+                if calculate_hit_rate_of_single_analyst(an) == 1: 
                     print("Save analyst after updating fields failed")
-                    print(f"Error message: {e}")
                     return "Command unsuccessful"
 
             print("Done")
