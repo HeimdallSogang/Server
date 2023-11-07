@@ -4,13 +4,14 @@ from django.core.management.base import BaseCommand, CommandError
 from reports.models import Analyst, Point, Report, Writes
 from test_code.analyze import analyze, read_pdf
 
+
 class Command(BaseCommand):
     help = "Revise points or analyst names on a report"
 
     def add_arguments(self, parser):
         target_choices = ["point", "analyst"]
         parser.add_argument(
-            "target", 
+            "target",
             choices=target_choices,
             type=str,
             help=f"What to revise. Select between {target_choices}",
@@ -31,50 +32,57 @@ class Command(BaseCommand):
         if len(report_candidates) == 0:
             raise CommandError(f"No report with title that contains {report_title}")
         elif len(report_candidates) > 1:
-            for (idx, rc) in enumerate(report_candidates):
+            for idx, rc in enumerate(report_candidates):
                 print(f"{idx}: {rc.title:<20} {rc.publish_date}")
-            
+
             print("Select report number you are referring to")
             report_idx = input(">> ")
-            try: 
+            try:
                 report_idx = int(report_idx)
                 if report_idx < 0 or report_idx >= len(report_candidates):
                     raise ValueError()
             except (ValueError, TypeError):
                 raise CommandError("Input a valid index")
-            
+
             report = report_candidates[idx]
         else:
             report = report_candidates[0]
-        
+
         if revise_target == "point":
             # display existing points
-            print("List point numbers to DELETE with whitespace in between. Type 'a' for all points.")
+            print(
+                "List point numbers to DELETE with whitespace in between. Type 'a' for all points."
+            )
             print(f"Reference to the original report: {report.url}")
 
             points = Point.objects.filter(report=report)
-            for (idx, point) in enumerate(points):
+            for idx, point in enumerate(points):
                 print(f"{idx}: {point.content}")
-            
+
             # input existing points index to discard
             discard_points_idx = []
             discard_points_input = input(">> ").strip()
             if discard_points_input.lower() == "a":
                 discard_points_idx = [i for i in range(len(points))]
             else:
-                try: 
-                    discard_points_idx = [int(idx) for idx in discard_points_input.split() if (0 <= int(idx) and int(idx) < len(points))]
+                try:
+                    discard_points_idx = [
+                        int(idx)
+                        for idx in discard_points_input.split()
+                        if (0 <= int(idx) and int(idx) < len(points))
+                    ]
                 except ValueError:
                     raise CommandError("Input a valid index")
 
             # generate new points
             all_generated_points = []
-            while(True):
+            while True:
                 print("Generate additional points? (y/n)")
                 generate_points_input = input(">> ").lower()
                 generate_points = True if generate_points_input == "y" else False
-                if not generate_points: break
-                
+                if not generate_points:
+                    break
+
                 # temp
                 negative_points = [f"point {datetime.now()}", f"point {datetime.now()}"]
                 # end of temp
@@ -92,9 +100,9 @@ class Command(BaseCommand):
 
                 # display new points
                 print("Generated points: ")
-                for (idx, point) in enumerate(all_generated_points):
+                for idx, point in enumerate(all_generated_points):
                     print(f"{idx}: {point}")
-            
+
             # select new points index to keep
             add_points_idx = []
             print("Select new point numbers to save. Type 'a' for all points.")
@@ -103,10 +111,14 @@ class Command(BaseCommand):
                 add_points_idx = [i for i in range(len(all_generated_points))]
             else:
                 try:
-                    add_points_idx = [int(idx) for idx in add_points_input.split() if 0 <= int(idx) and int(idx) < len(all_generated_points)]
+                    add_points_idx = [
+                        int(idx)
+                        for idx in add_points_input.split()
+                        if 0 <= int(idx) and int(idx) < len(all_generated_points)
+                    ]
                 except ValueError:
                     raise CommandError("Input a valid index")
-            
+
             # delete points to discard, add points to add
             print("  These points will be DELETED:")
             for idx in discard_points_idx:
@@ -121,19 +133,23 @@ class Command(BaseCommand):
             if proceed != "y":
                 print("No changes made")
                 return 1
-            
+
             for idx in discard_points_idx:
-                try: 
+                try:
                     points[idx].delete()
                 except Exception as e:
                     print(f"Deletion failed on point {idx}. Error: {e}")
-            
+
             for idx in add_points_idx:
                 try:
-                    Point.objects.get_or_create(report=report, is_positive=False, content=all_generated_points[idx])
+                    Point.objects.get_or_create(
+                        report=report,
+                        is_positive=False,
+                        content=all_generated_points[idx],
+                    )
                 except Exception as e:
                     print(f"Creation failed on point {idx}. Error: {e}")
-            
+
             print("Done")
             return 0
 
@@ -144,11 +160,13 @@ class Command(BaseCommand):
 
             print(f"Current analysts of this report are {before_analyst_names}")
 
-            print("\nGive correct analyst name(s). Separate names with whitespace in between.")
+            print(
+                "\nGive correct analyst name(s). Separate names with whitespace in between."
+            )
             print(f"Reference to the original report: {report.url}")
             names_input = input(">> ").strip()
             after_analyst_names = set(names_input.split())
-            
+
             # wrong analysts = before - after
             wrong_analyst_names = before_analyst_names - after_analyst_names
             print("These analysts will be DELETED from authors of this report: ")
@@ -171,31 +189,31 @@ class Command(BaseCommand):
             wrong_analysts = []
             for wr in writes:
                 if wr.analyst.name in wrong_analyst_names:
-                    try: 
+                    try:
                         wr.delete()
                     except Exception as e:
                         print("Deletion of Writes object failed")
                         print(f"Error message: {e}")
                         return 1
                     wrong_analysts.append(wr.analyst)
-            
+
             # add write objects about new analysts
             new_analysts = []
             company = before_analysts[0].company
             for name in new_analyst_names:
-                try: 
+                try:
                     analyst = Analyst.objects.get_or_create(name=name, company=company)
                 except Exception as e:
                     print("Creation of Analyst failed")
                     print(f"Error message: {e}")
                     return 1
-                try: 
+                try:
                     Writes.objects.get_or_create(report=report, analyst=analyst)
                 except Exception as e:
                     print("Creation of Writes object failed")
                     print(f"Error message: {e}")
                     return 1
-                
+
                 new_analysts.append(analyst)
 
             # update hit rate, average something fields for wrong and new analysts
@@ -206,6 +224,6 @@ class Command(BaseCommand):
                 # temp
                 an.avg_days_hit = 424242
                 # end of temp
-                
+
             print("Done")
             return 0
