@@ -202,7 +202,7 @@ class Command(BaseCommand):
             company = before_analysts[0].company
             for name in new_analyst_names:
                 try:
-                    analyst = Analyst.objects.get_or_create(name=name, company=company)
+                    analyst, _ = Analyst.objects.get_or_create(name=name, company=company)
                 except Exception as e:
                     print("Creation of Analyst failed")
                     print(f"Error message: {e}")
@@ -224,6 +224,12 @@ class Command(BaseCommand):
                 # temp
                 an.avg_days_hit = 424242
                 # end of temp
+                try: 
+                    an.save()
+                except Exception as e:
+                    print("Save analyst after updating fields failed")
+                    print(f"Error message: {e}")
+                    return "Command unsuccessful"
 
             print("Done")
             return 0
