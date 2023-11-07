@@ -7,7 +7,8 @@ from reports.serializers import (
     ReportSerializer,
     StockSerializer,
     WritesSerializer,
-    StockPageSerializer,  ## 종목 검색 페이지를 위한 API용 시리얼라이저
+    StockReportSerializer,  ## 종목 검색 페이지를 위한 API용 시리얼라이저
+    AnalystReportSerializer,  ## 애널리스트 검색 페이지를 위한 API용 시리얼라이저
 )
 from reports.models import Point, Report, Stock, Writes
 from analysts.pagination import CustomPageNumberPagination
@@ -34,9 +35,9 @@ class StockReportFilter(filters.FilterSet):
         return queryset.filter(min_hit_rate__gte=value)
 
 
-## http GET /stocks/주식_ID/reports
+## http GET /stocks/주식_ID/reports/
 class StockReportsView(generics.ListAPIView):
-    serializer_class = ReportSerializer
+    serializer_class = StockReportSerializer
     filter_backends = [filters.DjangoFilterBackend, drf_filters.OrderingFilter]
     filterset_class = StockReportFilter
     ordering_fields = ["publish_date", "hit_rate"]
@@ -45,6 +46,7 @@ class StockReportsView(generics.ListAPIView):
 
     def get_queryset(self):
         stock_id = self.kwargs["pk"]
+
         return Report.objects.filter(stock_id=stock_id)
 
 
@@ -60,8 +62,9 @@ class AnalystReportFilter(filters.FilterSet):
         fields = ["publish_date", "sentiment", "stock_id"]
 
 
+## http GET /analysts/애널_ID/reports/
 class AnalystReportsView(generics.ListAPIView):
-    serializer_class = ReportSerializer
+    serializer_class = AnalystReportSerializer
     filter_backends = [filters.DjangoFilterBackend, drf_filters.OrderingFilter]
     filterset_class = AnalystReportFilter
     ordering_fields = ["publish_date", "hit_rate"]
@@ -86,8 +89,3 @@ class PointViewSet(viewsets.ReadOnlyModelViewSet):
 class WritesViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Writes.objects.all()
     serializer_class = WritesSerializer
-
-
-class TestViewSet(generics.ListAPIView):
-    queryset = Report.objects.all()
-    serializer_class = StockPageSerializer
