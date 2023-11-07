@@ -131,8 +131,7 @@ class Command(BaseCommand):
             print("Proceed the transaction? (y/n)")
             proceed = input(">> ").strip().lower()
             if proceed != "y":
-                print("No changes made")
-                return 1
+                return "No changes made"
 
             for idx in discard_points_idx:
                 try:
@@ -182,8 +181,7 @@ class Command(BaseCommand):
             print("Proceed the transaction? (y/n)")
             proceed = input(">> ").strip().lower()
             if proceed != "y":
-                print("No changes made")
-                return 1
+                return "No changes made"
 
             # delete write objects about wrong analysts
             wrong_analysts = []
@@ -194,7 +192,7 @@ class Command(BaseCommand):
                     except Exception as e:
                         print("Deletion of Writes object failed")
                         print(f"Error message: {e}")
-                        return 1
+                        return "Command unsuccessful"
                     wrong_analysts.append(wr.analyst)
 
             # add write objects about new analysts
@@ -206,13 +204,13 @@ class Command(BaseCommand):
                 except Exception as e:
                     print("Creation of Analyst failed")
                     print(f"Error message: {e}")
-                    return 1
+                    return "Command unsuccessful"
                 try:
                     Writes.objects.get_or_create(report=report, analyst=analyst)
                 except Exception as e:
                     print("Creation of Writes object failed")
                     print(f"Error message: {e}")
-                    return 1
+                    return "Command unsuccessful"
 
                 new_analysts.append(analyst)
 
