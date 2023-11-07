@@ -180,7 +180,9 @@ class Command(BaseCommand):
 
             print("Proceed the transaction? (y/n)")
             proceed = input(">> ").strip().lower()
-            if proceed != "y":
+            if proceed != "y" or (
+                len(wrong_analyst_names) == 0 and len(new_analyst_names) == 0
+            ):
                 return "No changes made"
 
             # delete write objects about wrong analysts
