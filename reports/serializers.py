@@ -70,13 +70,15 @@ class StockReportSerializer(serializers.ModelSerializer):
                 analyst
             )  # AnalystSerializer를 사용하여 시리얼라이즈
 
-            name = analyst_serializer.data["name"]
+            analyst_id = analyst_serializer.data["id"]
+            analyst_name = analyst_serializer.data["name"]
             avg_days_hit = analyst_serializer.data["avg_days_hit"]
             avg_days_to_first_hit = analyst_serializer.data["avg_days_to_first_hit"]
             avg_days_to_first_miss = analyst_serializer.data["avg_days_to_first_miss"]
 
             analyst_data = {
-                "name": name,
+                "analyst_id": analyst_id,
+                "analyst_name": analyst_name,
                 "analyst_history": {
                     "avg_days_hit": avg_days_hit,
                     "avg_days_to_first_hit": avg_days_to_first_hit,
@@ -91,6 +93,7 @@ class StockReportSerializer(serializers.ModelSerializer):
 class AnalystReportSerializer(serializers.ModelSerializer):
     points = serializers.SerializerMethodField()
     stock_name = serializers.SerializerMethodField()
+    stock_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Report
@@ -99,6 +102,7 @@ class AnalystReportSerializer(serializers.ModelSerializer):
             "points",
             "target_price",
             "publish_date",
+            "stock_id",
             "stock_name",
             "hidden_sentiment",
             "hit_rate",
@@ -115,6 +119,10 @@ class AnalystReportSerializer(serializers.ModelSerializer):
         content_list = [item["content"] for item in point_serializer.data]
         return content_list
 
-    ## 애널리스트 정보 추출
+    ## 주식 ID 추출
+    def get_stock_id(self, obj):
+        return obj.stock.id
+
+    ## 주식 이름 추출
     def get_stock_name(self, obj):
         return obj.stock.name
