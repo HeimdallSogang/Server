@@ -1,6 +1,7 @@
+from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 
-from reports.models import Point, Report
+from reports.models import Analyst, Point, Report, Writes
 from test_code.analyze import analyze, read_pdf
 
 class Command(BaseCommand):
@@ -74,15 +75,19 @@ class Command(BaseCommand):
                 generate_points = True if generate_points_input == "y" else False
                 if not generate_points: break
                 
-                negative_points = []
-                text_per_page = read_pdf(report.url)
-                for text in text_per_page:
-                    analysis = analyze(text)
-                    if not analysis:
-                        continue
-                    if "negative thoughts" in analysis:
-                        for neg_point in analysis["negative thoughts"]:
-                            negative_points.append(neg_point)
+                # temp
+                negative_points = [f"point {datetime.now()}", f"point {datetime.now()}"]
+                # end of temp
+
+                # negative_points = []
+                # text_per_page = read_pdf(report.url)
+                # for text in text_per_page:
+                #     analysis = analyze(text)
+                #     if not analysis:
+                #         continue
+                #     if "negative thoughts" in analysis:
+                #         for neg_point in analysis["negative thoughts"]:
+                #             negative_points.append(neg_point)
                 all_generated_points += negative_points
 
                 # display new points
@@ -133,4 +138,74 @@ class Command(BaseCommand):
             return 0
 
         elif revise_target == "analyst":
-            pass
+            writes = Writes.objects.filter(report=report).select_related("analyst")
+            before_analysts = [wr.analyst for wr in writes]
+            before_analyst_names = set([an.name for an in before_analysts])
+
+            print(f"Current analysts of this report are {before_analyst_names}")
+
+            print("\nGive correct analyst name(s). Separate names with whitespace in between.")
+            print(f"Reference to the original report: {report.url}")
+            names_input = input(">> ").strip()
+            after_analyst_names = set(names_input.split())
+            
+            # wrong analysts = before - after
+            wrong_analyst_names = before_analyst_names - after_analyst_names
+            print("These analysts will be DELETED from authors of this report: ")
+            for name in wrong_analyst_names:
+                print(f"  {name}")
+
+            # new analysts = after - before
+            new_analyst_names = after_analyst_names - before_analyst_names
+            print("These analysts will be ADDED as authors of this report: ")
+            for name in new_analyst_names:
+                print(f"  {name}")
+
+            print("Proceed the transaction? (y/n)")
+            proceed = input(">> ").strip().lower()
+            if proceed != "y":
+                print("No changes made")
+                return 1
+
+            # delete write objects about wrong analysts
+            wrong_analysts = []
+            for wr in writes:
+                if wr.analyst.name in wrong_analyst_names:
+                    try: 
+                        wr.delete()
+                    except Exception as e:
+                        print("Deletion of Writes object failed")
+                        print(f"Error message: {e}")
+                        return 1
+                    wrong_analysts.append(wr.analyst)
+            
+            # add write objects about new analysts
+            new_analysts = []
+            company = before_analysts[0].company
+            for name in new_analyst_names:
+                try: 
+                    analyst = Analyst.objects.get_or_create(name=name, company=company)
+                except Exception as e:
+                    print("Creation of Analyst failed")
+                    print(f"Error message: {e}")
+                    return 1
+                try: 
+                    Writes.objects.get_or_create(report=report, analyst=analyst)
+                except Exception as e:
+                    print("Creation of Writes object failed")
+                    print(f"Error message: {e}")
+                    return 1
+                
+                new_analysts.append(analyst)
+
+            # update hit rate, average something fields for wrong and new analysts
+            update_needed_analysts = wrong_analysts + new_analysts
+            for an in update_needed_analysts:
+                # an의 통계 업데이트
+
+                # temp
+                an.avg_days_hit = 424242
+                # end of temp
+                
+            print("Done")
+            return 0
