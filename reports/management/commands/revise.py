@@ -84,19 +84,15 @@ class Command(BaseCommand):
                 if not generate_points:
                     break
 
-                # temp
-                negative_points = [f"point {datetime.now()}", f"point {datetime.now()}"]
-                # end of temp
-
-                # negative_points = []
-                # text_per_page = read_pdf(report.url)
-                # for text in text_per_page:
-                #     analysis = analyze(text)
-                #     if not analysis:
-                #         continue
-                #     if "negative thoughts" in analysis:
-                #         for neg_point in analysis["negative thoughts"]:
-                #             negative_points.append(neg_point)
+                negative_points = []
+                text_per_page = read_pdf(report.url)
+                for text in text_per_page:
+                    analysis = analyze(text)
+                    if not analysis:
+                        continue
+                    if "reasons" in analysis:
+                        for neg_point in analysis["reasons"]:
+                            negative_points.append(neg_point)
                 all_generated_points += negative_points
 
                 # display new points
