@@ -94,6 +94,7 @@ class ReportPointView(generics.ListAPIView):
     def get_queryset(self):
         report_id = self.kwargs["report_id"]
         points = Point.objects.filter(report=report_id)
+
         return points
 
 

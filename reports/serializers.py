@@ -132,3 +132,6 @@ class ReportPointSerializer(serializers.ModelSerializer):
     class Meta:
         model = Point
         fields = ["content"]
+
+    def to_representation(self, instance):
+        return str(instance.content)
