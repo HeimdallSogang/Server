@@ -33,7 +33,25 @@ class WritesSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class StockReportSerializer(serializers.ModelSerializer):
+class PointContentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Point
+        fields = ["content"]
+
+    def to_representation(self, instance):
+        return str(instance.content)
+
+
+class PointsMixin:
+    # Provide functionality: Retreive list of "content" of points related to a report(obj)
+
+    def get_points(self, obj, max_count=3):
+        points = Point.objects.filter(report=obj)[:max_count]
+        serializer = PointContentSerializer(points, many=True)
+        return serializer.data
+
+
+class StockReportSerializer(serializers.ModelSerializer, PointsMixin):
     points = serializers.SerializerMethodField()
     analyst_data = serializers.SerializerMethodField()
 
@@ -50,50 +68,39 @@ class StockReportSerializer(serializers.ModelSerializer):
             "analyst_data",
         ]
 
-    ## 현재 리포트에 대한 부정포인트 추출
-    def get_points(self, obj):
-        points = Point.objects.filter(report=obj)[
-            :3
-        ]  ## 더보기를 누르기 전에는 최대 3개의 부정포인트만 추출하도록 함
-        point_serializer = PointSerializer(points, many=True)
-        content_list = [item["content"] for item in point_serializer.data]
-        return content_list
+    class BasicAnalystSerializer(AnalystSerializer):
+        history = serializers.SerializerMethodField()
 
-    ## 애널리스트 정보 추출
+        class Meta:
+            model = Analyst
+            fields = ["id", "name", "history"]
+
+        def get_history(self, analyst):
+            return {
+                "avg_days_hit": analyst.avg_days_hit,
+                "avg_days_to_first_hit": analyst.avg_days_to_first_hit,
+                "avg_days_to_first_miss": analyst.avg_days_to_first_miss,
+            }
+
+    ## 리포트를 쓴 애널리스트 정보
     def get_analyst_data(self, obj):
         writes = Writes.objects.filter(report=obj)
-        analyst_id = writes.values_list("analyst_id", flat=True).first()
+        analyst = Analyst.objects.filter(writes__in=writes).first()
 
-        if analyst_id is not None:
-            analyst = Analyst.objects.get(id=analyst_id)
-            analyst_serializer = AnalystSerializer(
-                analyst
-            )  # AnalystSerializer를 사용하여 시리얼라이즈
-
-            analyst_id = analyst_serializer.data["id"]
-            analyst_name = analyst_serializer.data["name"]
-            avg_days_hit = analyst_serializer.data["avg_days_hit"]
-            avg_days_to_first_hit = analyst_serializer.data["avg_days_to_first_hit"]
-            avg_days_to_first_miss = analyst_serializer.data["avg_days_to_first_miss"]
-
-            analyst_data = {
-                "analyst_id": analyst_id,
-                "analyst_name": analyst_name,
-                "analyst_history": {
-                    "avg_days_hit": avg_days_hit,
-                    "avg_days_to_first_hit": avg_days_to_first_hit,
-                    "avg_days_to_first_miss": avg_days_to_first_miss,
-                },
-            }
-            return analyst_data
+        if analyst is not None:
+            return self.BasicAnalystSerializer(analyst).data
         else:
-            return None  # 해당하는 analyst_id가 없을 경우 None 반환
+            return None  # 해당하는 analyst가 없을 경우 None 반환
 
 
-class AnalystReportSerializer(serializers.ModelSerializer):
+class AnalystReportSerializer(serializers.ModelSerializer, PointsMixin):
+    class BasicStockSerializer(StockSerializer):
+        class Meta:
+            model = Stock
+            fields = ["id", "name"]
+
     points = serializers.SerializerMethodField()
-    stock_name = serializers.SerializerMethodField()
-    stock_id = serializers.SerializerMethodField()
+    stock = BasicStockSerializer()
 
     class Meta:
         model = Report
@@ -102,36 +109,9 @@ class AnalystReportSerializer(serializers.ModelSerializer):
             "points",
             "target_price",
             "publish_date",
-            "stock_id",
-            "stock_name",
+            "stock",
             "hidden_sentiment",
             "hit_rate",
             "days_to_first_hit",
             "days_to_first_miss",
         ]
-
-    ## 현재 리포트에 대한 부정포인트 추출
-    def get_points(self, obj):
-        points = Point.objects.filter(report=obj)[
-            :3
-        ]  ## 더보기를 누르기 전에는 최대 3개의 부정포인트만 추출하도록 함
-        point_serializer = PointSerializer(points, many=True)
-        content_list = [item["content"] for item in point_serializer.data]
-        return content_list
-
-    ## 주식 ID 추출
-    def get_stock_id(self, obj):
-        return obj.stock.id
-
-    ## 주식 이름 추출
-    def get_stock_name(self, obj):
-        return obj.stock.name
-
-
-class ReportPointSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Point
-        fields = ["content"]
-
-    def to_representation(self, instance):
-        return str(instance.content)

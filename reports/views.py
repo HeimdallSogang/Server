@@ -9,7 +9,7 @@ from reports.serializers import (
     WritesSerializer,
     StockReportSerializer,  ## 종목 검색 페이지를 위한 API용 시리얼라이저
     AnalystReportSerializer,  ## 애널리스트 검색 페이지를 위한 API용 시리얼라이저
-    ReportPointSerializer,  ## 해당 종목리포트의 모든 부정포인트 반환 API용 시리얼라이저
+    PointContentSerializer,  ## 해당 종목리포트의 모든 부정포인트 반환 API용 시리얼라이저
 )
 from reports.models import Point, Report, Stock, Writes
 from analysts.pagination import CustomPageNumberPagination
@@ -89,7 +89,7 @@ class PointViewSet(viewsets.ReadOnlyModelViewSet):
 
 ## http GET /reports/:report_ID/points
 class ReportPointView(generics.ListAPIView):
-    serializer_class = ReportPointSerializer
+    serializer_class = PointContentSerializer
 
     def get_queryset(self):
         report_id = self.kwargs["report_id"]
