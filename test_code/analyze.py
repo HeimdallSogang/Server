@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-import openai
+from openai import OpenAI
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -14,7 +14,7 @@ load_dotenv()
 
 def analyze(text):
     try:
-        openai.api_key = os.getenv("OPENAI_API_KEY")
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         messages = [
             {
                 "role": "system",
@@ -58,10 +58,8 @@ def analyze(text):
         ]
 
         answer = ""
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            temperature=0,
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo", messages=messages, temperature=0
         )
         answer = response["choices"][0]["message"]["content"]
         print(answer)
