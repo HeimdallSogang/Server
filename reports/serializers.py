@@ -83,8 +83,8 @@ class StockReportSerializer(serializers.ModelSerializer, PointsMixin):
             }
 
     ## 리포트를 쓴 애널리스트 정보
-    def get_analyst_data(self, obj):
-        writes = Writes.objects.filter(report=obj)
+    def get_analyst_data(self, report):
+        writes = Writes.objects.filter(report=report)
         analyst = Analyst.objects.filter(writes__in=writes).first()
 
         if analyst is not None:
