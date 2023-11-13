@@ -61,7 +61,7 @@ def analyze(text):
         response = client.chat.completions.create(
             model="gpt-3.5-turbo", messages=messages, temperature=0
         )
-        answer = response["choices"][0]["message"]["content"]
+        answer = response.choices[0].message.content
         print(answer)
         result = json.loads(answer)
         if 'reasons' in result and 'writers' in result:
