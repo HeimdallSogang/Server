@@ -300,14 +300,10 @@ def fetch_stock_reports(stock_name, currency="KRW"):
             text_per_page = read_pdf(report_url)
             for text in text_per_page:
                 analysis = analyze(text)
-                if not analysis:
-                    continue
-                if "negative thoughts" in analysis:
-                    for neg_point in analysis["negative thoughts"]:
-                        negative_points.append(neg_point)
-                if "writers" in analysis:
-                    for analyst in analysis["writers"]:
-                        analyst_names.add(analyst)
+                for neg_point in analysis["reasons"]:
+                    negative_points.append(neg_point)
+                for analyst in analysis["writers"]:
+                    analyst_names.add(analyst)
 
             report_detail = get_report_detail_info(report_detail_page_url)
             if report_detail is None:

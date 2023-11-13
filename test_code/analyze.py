@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-import openai
+from openai import OpenAI
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -14,40 +14,68 @@ load_dotenv()
 
 def analyze(text):
     try:
-        openai.api_key = os.getenv("OPENAI_API_KEY")
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         messages = [
             {
                 "role": "system",
-                "content": "Your role is to analyze this text, extract negative thoughts, writers and respond appropriately to the format.",
+                "content": 
+                """
+                    If you can't find a value corresponding to the key, set it to empty list and return it
+                    The credibility of the reason is the most important.
+                    Use only the provided text.
+                    Respond in JSON format with 'reasons' and  'writers' and 'companies' as keys.
+                    Answer in Korean
+                """,
             },
             {
-                "role": "system",
-                "content": "Respond in JSON format with 'negative thoughts' and  'writers' as keys.",
+                "role": "user", "content": f"{text}:"
             },
-            {
-                "role": "system",
-                "content": "If you can't find a value corresponding to the key, set it to empty list and return it",
-            },
-            {"role": "user", "content": f"{text}:"},
             {
                 "role": "user",
-                "content": "Find out Negative thoughts in this text, and find names of the writers or analysts if there are(We want only names of Person, not the Company). GIVE IT TO ME IN KOREAN",
+                "content": 
+                """
+                    Analyze this stock analysis.
+                    Find out reasons to sell this stock.
+                    Find out writers of this report, not the company they are working for.
+                    Find out companies.
+                    Respond appropriately to the format
+                """,
             },
+            {
+                "role": "assistant",
+                "content":
+                """
+                    {
+                        "reasons": [
+                        ],
+                        "writers": [
+                        ]
+                        "companies": [
+                        ]
+                    }
+                """
+            }
         ]
 
         answer = ""
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            temperature=0,
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo", messages=messages, temperature=0
         )
         answer = response["choices"][0]["message"]["content"]
         print(answer)
-        return json.loads(answer)
+        result = json.loads(answer)
+        if 'reasons' in result and 'writers' in result:
+            if isinstance(result['reasons'], list) and isinstance(result['writers'], list):
+                return json.loads(answer)
+        print("fail")
+        return {
+            "reasons": [],
+            "writers": [],
+        }
     except Exception as e:
         print(e)
         return {
-            "negative thoughts": [],
+            "reasons": [],
             "writers": [],
         }
 
@@ -131,7 +159,6 @@ def crawl_pdf_link(url):
             pdf_url = a_tag["href"]
             pdf_urls.append(pdf_url)
         return pdf_urls
-        return pdf_urls
     except Exception as e:
         print(e)
         return ""
@@ -150,7 +177,6 @@ if __name__ == "__main__":
                 print(text)
                 try:
                     result = analyze(text)
-                    result = json.loads(result)
                     print(result)
                     print("\n\n\n\n")
                 except Exception as e:
@@ -158,3 +184,15 @@ if __name__ == "__main__":
                 break
             break
         break
+
+
+pdf_url = "https://ssl.pstatic.net/imgstock/upload/research/company/1695343870257.pdf"
+text_list = read_pdf(pdf_url)
+for text in text_list:
+    print(text)
+    try:
+        result = analyze(text)
+        print(result)
+        print("\n\n\n\n")
+    except Exception as e:
+        print(e)
