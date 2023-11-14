@@ -103,7 +103,7 @@ DATABASES = {
         #     'init_command' : "SET sql_mode='STRICT_TRANS_TABLES'"
         # }
         'ENGINE': 'django.db.backends.mysql',
-		'NAME': get_env_variable('DATABASE'),
+	'NAME': get_env_variable('DATABASE'),
         'USER': get_env_variable('DB_USER'),
         'PASSWORD': get_env_variable('DB_PASSWORD'),
         'HOST': get_env_variable('DB_HOST'),
