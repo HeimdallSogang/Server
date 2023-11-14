@@ -92,16 +92,16 @@ WSGI_APPLICATION = "config.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.mysql', # engine: mysql
-    #     'NAME' : os.getenv("DB_NAME"), # DB Name
-    #     'USER' : os.getenv("DB_USER"), # DB User
-    #     'PASSWORD' : os.getenv("DB_PASSWORD"), # Password
-    #     'HOST': os.getenv("DB_ENDPOINT"), # 생성한 데이터베이스 엔드포인트
-    #     'PORT': os.getenv("DB_PORT"), # 데이터베이스 포트
-    #     'OPTIONS':{
-    #         'init_command' : "SET sql_mode='STRICT_TRANS_TABLES'"
-    #     }
+    'default': {
+        # 'ENGINE': 'django.db.backends.mysql', # engine: mysql
+        # 'NAME' : os.getenv("DB_NAME"), # DB Name
+        # 'USER' : os.getenv("DB_USER"), # DB User
+        # 'PASSWORD' : os.getenv("DB_PASSWORD"), # Password
+        # 'HOST': os.getenv("DB_ENDPOINT"), # 생성한 데이터베이스 엔드포인트
+        # 'PORT': os.getenv("DB_PORT"), # 데이터베이스 포트
+        # 'OPTIONS':{
+        #     'init_command' : "SET sql_mode='STRICT_TRANS_TABLES'"
+        # }
         'ENGINE': 'django.db.backends.mysql',
 		'NAME': get_env_variable('DATABASE'),
         'USER': get_env_variable('DB_USER'),
