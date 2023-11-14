@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     "reports",
     "analysts",
     'corsheaders',
+    "django_filters",
+    "stocks",
 ]
 
 MIDDLEWARE = [
