@@ -19,15 +19,15 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 from django.core.exceptions import ImproperlyConfigured
-# def get_env_variable(var_name):
-#   try:
-#     return os.environ[var_name]
-#   except KeyError:
-#     error_msg = 'Set the {} environment variable'.format(var_name)
-#     raise ImproperlyConfigured(error_msg)
+def get_env_variable(var_name):
+  try:
+    return os.environ[var_name]
+  except KeyError:
+    error_msg = 'Set the {} environment variable'.format(var_name)
+    raise ImproperlyConfigured(error_msg)
 
-# SECRET_KEY = get_env_variable('DJANGO_SECRET')
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = get_env_variable('DJANGO_SECRET')
+# SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -92,25 +92,25 @@ WSGI_APPLICATION = "config.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql', # engine: mysql
-        'NAME' : os.getenv("DB_NAME"), # DB Name
-        'USER' : os.getenv("DB_USER"), # DB User
-        'PASSWORD' : os.getenv("DB_PASSWORD"), # Password
-        'HOST': os.getenv("DB_ENDPOINT"), # 생성한 데이터베이스 엔드포인트
-        'PORT': os.getenv("DB_PORT"), # 데이터베이스 포트
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.mysql', # engine: mysql
+    #     'NAME' : os.getenv("DB_NAME"), # DB Name
+    #     'USER' : os.getenv("DB_USER"), # DB User
+    #     'PASSWORD' : os.getenv("DB_PASSWORD"), # Password
+    #     'HOST': os.getenv("DB_ENDPOINT"), # 생성한 데이터베이스 엔드포인트
+    #     'PORT': os.getenv("DB_PORT"), # 데이터베이스 포트
+    #     'OPTIONS':{
+    #         'init_command' : "SET sql_mode='STRICT_TRANS_TABLES'"
+    #     }
+        'ENGINE': 'django.db.backends.mysql',
+		'NAME': get_env_variable('DATABASE'),
+        'USER': get_env_variable('DB_USER'),
+        'PASSWORD': get_env_variable('DB_PASSWORD'),
+        'HOST': get_env_variable('DB_HOST'),
+        'PORT': get_env_variable('DB_PORT'),
         'OPTIONS':{
             'init_command' : "SET sql_mode='STRICT_TRANS_TABLES'"
         }
-        # 'ENGINE': 'django.db.backends.mysql',
-		# 'NAME': get_env_variable('DATABASE'),
-        # 'USER': get_env_variable('DB_USER'),
-        # 'PASSWORD': get_env_variable('DB_PASSWORD'),
-        # 'HOST': get_env_variable('DB_HOST'),
-        # 'PORT': get_env_variable('DB_PORT'),
-        # 'OPTIONS':{
-        #     'init_command' : "SET sql_mode='STRICT_TRANS_TABLES'"
-        # }
     }
 }
 
