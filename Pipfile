@@ -35,6 +35,7 @@ pymysql="*"
 django-filter = "*"
 
 [dev-packages]
+django-debug-toolbar = "*"
 
 [requires]
 python_version ="3.8"  
