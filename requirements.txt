@@ -30,4 +30,4 @@ tzdata==2023.3
 urllib3==2.0.4
 whitenoise==6.6.0
 yarl==1.9.2
-mysqlclient-1.4.6-cp39-cp39-win_amd64.whl 
+mysqlclient==2.2.0
