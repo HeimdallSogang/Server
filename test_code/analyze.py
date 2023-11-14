@@ -11,7 +11,6 @@ import json
 ## 커밋 테스트용 주석2
 load_dotenv()
 
-
 def analyze(text):
     try:
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -81,7 +80,6 @@ def analyze(text):
             "writers": [],
         }
 
-
 def preprocessing(page_text):
     cleaned_text = re.sub(r"[\n\t]", " ", page_text)
     return cleaned_text
@@ -109,7 +107,6 @@ def read_pdf(pdf_url):
     except Exception as e:
         print(e)
         return []
-
 
 def crawl_pdf_link(url):
     try:
@@ -163,7 +160,6 @@ def crawl_pdf_link(url):
         print(e)
         return ""
 
-
 if __name__ == "__main__":
     start_url = "https://finance.naver.com/research/company_list.naver?keyword=&brokerCode=&writeFromDate=&writeToDate=&searchType=itemCode&itemName=%C4%AB%C4%AB%BF%C0&itemCode=035720&x=40&y=33"
     for i in range(1, 10):
@@ -192,3 +188,4 @@ for text in text_list:
         print("\n\n\n\n")
     except Exception as e:
         print(e)
+
