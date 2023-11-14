@@ -32,10 +32,11 @@ urllib3="*"
 yarl="*"
 mysqlclient="*"
 pymysql="*"
+django-filter = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"
 
 [requires]
 python_version ="3.8"  
-python_full_version ="3.8.11"   
+python_full_version ="3.8.11"
