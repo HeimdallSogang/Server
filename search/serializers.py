@@ -14,10 +14,7 @@ class AnalystSearchSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "company"]
 
 
-class StockAnlalystSerializers(serializers.Serializer):
-    stocks = StockSearchSerializer(many=True)
-    analysts = AnalystSearchSerializer(many=True)
-
+class StockAnalystSerializer(serializers.Serializer):
     def to_representation(self, instance):
         stocks_queryset = instance["stocks"]
         analysts_queryset = instance["analysts"]

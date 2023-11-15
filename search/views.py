@@ -1,6 +1,6 @@
 from rest_framework.generics import ListAPIView
 from reports.models import *
-from search.serializers import StockAnlalystSerializers
+from search.serializers import StockAnalystSerializer
 from rest_framework.response import Response
 
 
@@ -11,7 +11,7 @@ class SearchView(ListAPIView):
         stocks_queryset = Stock.objects.filter(name__icontains=query)
         analysts_queryset = Analyst.objects.filter(name__icontains=query)
 
-        serializer = StockAnlalystSerializers(
+        serializer = StockAnalystSerializer(
             {"stocks": stocks_queryset, "analysts": analysts_queryset}
         )
 
