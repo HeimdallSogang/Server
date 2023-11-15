@@ -23,6 +23,7 @@ urlpatterns = [
     path('sellpointadministrator/', admin.site.urls),
     path('analysts/', include("analysts.urls")),
     path('reports/', include("reports.urls")),
+    path('stocks/', include("stocks.urls")),
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root':settings.MEDIA_ROOT}),
     re_path(r'^static/(?:.*)$', serve, {'document_root': settings.STATIC_ROOT, }),
 ]
