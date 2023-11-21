@@ -26,14 +26,15 @@ def get_openai_client():
 
 def analyze_pdf(pdf_url, test=False):
     # get analysts from the first page
-    first_page_text = read_pdf(pdf_url, from_page=1, to_page=1)
-    analysts = get_analysts(first_page_text, test=test)
+    # first_page_text = read_pdf(pdf_url, from_page=1, to_page=1)
+    # analysts = get_analysts(first_page_text, test=test)
 
-    # get negative points from all pages
-    all_text = read_pdf(pdf_url)
+    # get negative points from only the first two pages (pages that mainly contains text)
+    all_text = read_pdf(pdf_url, to_page=2)
     negative_points = get_negative_points(all_text, test=test)
 
-    return {"writers": analysts, "negative points": negative_points}
+    # return {"writers": analysts, "negative points": negative_points}
+    return None
 
 
 def get_negative_points(text_list: list, test=False) -> list:
@@ -42,26 +43,29 @@ def get_negative_points(text_list: list, test=False) -> list:
         {
             "role": "system",
             "content": """
-                The credibility of the reason is the most important. Use only the provided text to find the answers. 
-                Respond in a format of list of strings. ex) ["hello", "world"]
-                If you can't find the answer to the question, return an empty list [].
+                You will be provided with a stock analysis report delimited by triple quotes and a question. 
+                Your task is to answer the question using only the provided text and to cite the passage(s) of the text used to answer the question.  
+                If the text does not contain the information needed to answer this question then simply write: "Insufficient information".
+                If an answer to the question is provided, it must be annotated with a citation. 
+                Use the following format to cite relevant passages({"citation": ...}). 
                 Answer in Korean. 
             """,
-        },
-        {
-            "role": "user",
-            "content": """
-                Read the following stock analysis report and find out the negative reasons to sell this stock. 
-                Only gather data from the sentences and not the tables and graphs.
-                Do not fake answers. 
-            """,
+
+            # TODO: 1. JSON formatting (refer to https://platform.openai.com/docs/guides/text-generation/json-mode)
+            # TODO: 2. Don't use table figure - may need to touch on preprocessing(\t, \n are indicators of table)
         },
     ]
 
     ret = []
     for text in text_list:
         messages = BASE_MESSAGE + [
-            {"role": "user", "content": str(text)},
+            {
+                "role": "user",
+                "content": '"""'
+                + str(text)
+                + '"""\n'
+                + "Question: What are the risks and negative points of this company?",
+            }
         ]
 
         if test:
@@ -71,7 +75,14 @@ def get_negative_points(text_list: list, test=False) -> list:
                 model="gpt-3.5-turbo", messages=messages, temperature=0
             )
             answer = response.choices[0].message.content
-            result = json.loads(answer)
+            
+            result = answer
+            if str(result).find("Insufficient information") != -1:
+                print(f"    can't find")
+            else:
+                print(f'    answer: {result}')
+                # TODO: Figure out how GPT responds with citations
+
         except Exception as e:
             print(f"Error while getting answer from GPT: {e}")
             result = []
