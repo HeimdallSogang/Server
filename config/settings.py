@@ -34,8 +34,8 @@ SECRET_KEY = get_env_variable("DJANGO_SECRET")
 # SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = False
-DEBUG = True
+DEBUG = False
+# DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -58,11 +58,9 @@ INSTALLED_APPS = [
     "django_filters",
     "stocks",
     "search",
-    "debug_toolbar",  ## django debug toolbar requirements
 ]
 
 MIDDLEWARE = [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",  # django-debug-toolbar requirement
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -162,7 +160,3 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-INTERNAL_IPS = [
-    "127.0.0.1",  # django-debug-toolbar requirement
-]
