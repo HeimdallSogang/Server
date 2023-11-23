@@ -6,9 +6,9 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET  ## XML 데이터 파싱을 위한 패키지
 from django.db.models import Count, Sum
+from analyzer.analyze import analyze_pdf
 
 from reports.models import Analyst, Currency, Point, Report, Stock, Writes
-from test_code.analyze import analyze, read_pdf
 
 
 ## stock : 주식 이름
@@ -307,13 +307,9 @@ def fetch_stock_reports(stock_name, currency="KRW", max_reports_num=-1):
 
             negative_points = []
             analyst_names = set()
-            text_per_page = read_pdf(report_url)
-            for text in text_per_page:
-                analysis = analyze(text)
-                for neg_point in analysis["reasons"]:
-                    negative_points.append(neg_point)
-                for analyst in analysis["writers"]:
-                    analyst_names.add(analyst)
+            analysis = analyze_pdf(report_url)
+            negative_points += analysis["negative points"]
+            analyst_names += analysis["writers"]
 
             report_detail = get_report_detail_info(report_detail_page_url)
             if report_detail is None:
