@@ -45,14 +45,12 @@ def get_negative_points(text_list: list, test=False) -> list:
             "content": """
                 You will be provided with a stock analysis report delimited by triple quotes and a question. 
                 Your task is to answer the question using only the provided text and to cite the passage(s) of the text used to answer the question.  
-                If the text does not contain the information needed to answer this question then simply write: "Insufficient information".
+                If the text does not contain the information needed to answer this question then respond with an empty list(ex. []).
                 If an answer to the question is provided, it must be annotated with a citation. 
-                Use the following format to cite relevant passages({"citation": ...}). 
+                Respond in JSON format with a single key 'response' to a list of objects, where each object has keys "answer", and "citation". 
+                Use key "citation" to cite relevant passages. 
                 Answer in Korean. 
             """,
-
-            # TODO: 1. JSON formatting (refer to https://platform.openai.com/docs/guides/text-generation/json-mode)
-            # TODO: 2. Don't use table figure - may need to touch on preprocessing(\t, \n are indicators of table)
         },
     ]
 
@@ -69,29 +67,34 @@ def get_negative_points(text_list: list, test=False) -> list:
         ]
 
         if test:
-            print(f"Q: Get negative points from: {str(text)}")
+            print(f"\nQ: Get negative points from: \n{str(text)}")
         try:
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo", messages=messages, temperature=0
+                model="gpt-4-1106-preview",
+                messages=messages,
+                temperature=0,
+                response_format={"type": "json_object"},
             )
             answer = response.choices[0].message.content
-            
-            result = answer
-            if str(result).find("Insufficient information") != -1:
-                print(f"    can't find")
-            else:
-                print(f'    answer: {result}')
-                # TODO: Figure out how GPT responds with citations
+
+            result = json.loads(answer)
 
         except Exception as e:
             print(f"Error while getting answer from GPT: {e}")
-            result = []
+            return []
 
-        if isinstance(result, list):
-            new_points = [str(e) for e in result]
+        if isinstance(result, dict) and "response" in result:
+            response = result["response"]
+            new_points = []
+            for r in response:  # dict with keys 'answer' and 'citation' expected
+                if "citation" in r:
+                    if len(r["citation"]) == 0:
+                        pass
+                    negative_point = str(r["citation"]).strip()
+                    new_points.append(negative_point)
             ret += new_points
             if test:
-                print(f"New negative points: {new_points}")
+                print(f"    New negative points: {new_points}")
 
     return ret
 
@@ -104,15 +107,16 @@ def get_analysts(text_list: list, test=False) -> list:
             "role": "system",
             "content": """
                 Use only the provided text to find the answers. 
-                Respond in a format of list of strings. ex) ["hello", "world"]
-                If you can't find the answer to the question, return an empty list [].
+                Respond in JSON format with a key "authors" that has a list of names as value. 
+                If you can't find the answer to the question, return `{"authors": []}`
             """,
         },
         {
             "role": "user",
             "content": """
                 Read the following stock analysis report and find out the author of the report. 
-                If there are multiple, find all of them. If not found, respond as an empty list.
+                If there are multiple, find all of them. 
+                Return only the person's name without the position in the company. 
             """,
         },
     ]
@@ -122,23 +126,26 @@ def get_analysts(text_list: list, test=False) -> list:
         messages = BASE_MESSAGE + [{"role": "user", "content": str(text)}]
 
         if test:
-            print(f"Q: Get analysts from: {str(text)}")
+            print(f"\nQ: Get analysts from: \n{str(text)}")
 
         try:
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo", messages=messages, temperature=0
+                model="gpt-4-1106-preview",
+                messages=messages,
+                temperature=0,
+                response_format={"type": "json_object"},
             )
             answer = response.choices[0].message.content
             result = json.loads(answer)
         except Exception as e:
             print(f"Error while getting answer from GPT: {e}")
-            result = []
+            return []
 
-        if isinstance(result, list):
-            new_analysts = [str(e) for e in result]
+        if isinstance(result, dict) and "authors" in result:
+            new_analysts = [str(e).strip() for e in result["authors"]]
             ret += new_analysts
             if test:
-                print(f"New analysts: {new_analysts}")
+                print(f"    New analysts: {new_analysts}")
 
     return ret
 
