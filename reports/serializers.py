@@ -59,6 +59,7 @@ class StockReportSerializer(serializers.ModelSerializer, PointsMixin):
         model = Report
         fields = [
             "id",
+            "title",
             "points",
             "target_price",
             "publish_date",
@@ -106,6 +107,7 @@ class AnalystReportSerializer(serializers.ModelSerializer, PointsMixin):
         model = Report
         fields = [
             "id",
+            "title",
             "points",
             "target_price",
             "publish_date",
