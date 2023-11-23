@@ -99,11 +99,6 @@ class AnalystReportsView(generics.ListAPIView):
             return Report.objects.filter(writes__analyst_id=analyst_id)
 
 
-class StockViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Stock.objects.all()
-    serializer_class = StockSerializer
-
-
 class PointViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Point.objects.all()
     serializer_class = PointSerializer
