@@ -32,6 +32,9 @@ def get_price_on_publish(stock, date):
     try:
         ## GET 요청 보내기
         response = requests.get(stockPriceApiBaseurl, params=params)
+        if response.status_code != 200:
+            print(f"failed to get price of stock. GET failed {stockPriceApiBaseurl}")
+            return None
 
         ## XML로 반환된 데이터의 내용 추출하기 위한 처리
         xml_data = response.content
@@ -64,6 +67,9 @@ def get_stock_code(stock_name):
     try:
         ## GET 요청 보내기
         response = requests.get(stockPriceApiBaseurl, params=params)
+        if response.status_code != 200:
+            print(f"failed to get stock code. GET failed {stockPriceApiBaseurl}")
+            return None
 
         ## XML로 반환된 데이터의 내용 추출하기 위한 처리
         xml_data = response.content
@@ -251,6 +257,9 @@ def fetch_stock_reports(stock_name, currency="KRW"):
     while True:
         url = f"https://finance.naver.com/research/company_list.naver?keyword=&brokerCode=&writeFromDate=&writeToDate=&searchType=itemCode&itemCode={stock_code}&page={page_num}"
         response = requests.get(url)
+        if response.status_code != 200:
+            print(f"failed to get reports list page. GET failed for {url}")
+            return None
         soup = BeautifulSoup(response.text, "html.parser")
 
         # Find the reports table
