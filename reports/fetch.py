@@ -234,7 +234,7 @@ def get_report_detail_info(report_detail_page_url):
     return None
 
 
-def fetch_stock_reports(stock_name, currency="KRW"):
+def fetch_stock_reports(stock_name, currency="KRW", max_reports_num=-1):
     # Get stock code from stock name
     stock_code = get_stock_code(stock_name)
     if stock_code is None:
@@ -252,9 +252,10 @@ def fetch_stock_reports(stock_name, currency="KRW"):
         name=stock_name, code=stock_code, currency=currency_instance
     )
 
+    saved_reports_num = 0
     page_num = 1
 
-    while True:
+    while max_reports_num == -1 or saved_reports_num < max_reports_num:
         url = f"https://finance.naver.com/research/company_list.naver?keyword=&brokerCode=&writeFromDate=&writeToDate=&searchType=itemCode&itemCode={stock_code}&page={page_num}"
         response = requests.get(url)
         if response.status_code != 200:
@@ -359,6 +360,7 @@ def fetch_stock_reports(stock_name, currency="KRW"):
             # save report to DB
             try:
                 report.save()
+                saved_reports_num += 1
             except Exception as e:
                 print(f"Exception on saving report: {report}")
                 print(e)
