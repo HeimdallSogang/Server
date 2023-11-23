@@ -268,6 +268,9 @@ def fetch_stock_reports(stock_name, currency="KRW", max_reports_num=-1):
 
         # Iterate over each row in the table body (skipping header and empty rows)
         for row in reports_table.find_all("tr"):
+            if saved_reports_num >= max_reports_num:
+                break
+
             columns = row.find_all("td")
 
             # Skip if it's an empty row or header
@@ -305,11 +308,9 @@ def fetch_stock_reports(stock_name, currency="KRW", max_reports_num=-1):
             ).exists():
                 continue
 
-            negative_points = []
-            analyst_names = set()
             analysis = analyze_pdf(report_url)
-            negative_points += analysis["negative points"]
-            analyst_names += analysis["writers"]
+            negative_points = analysis["negative points"]
+            analyst_names = analysis["writers"]
 
             report_detail = get_report_detail_info(report_detail_page_url)
             if report_detail is None:

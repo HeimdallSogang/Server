@@ -38,7 +38,7 @@ class Command(BaseCommand):
             nargs="+",
             type=int,
             help="Maximum number of reports per stock to scrape",
-            default=-1
+            default=-1,
         )
 
     def handle(self, *args, **options):
@@ -46,6 +46,9 @@ class Command(BaseCommand):
         stocks = options["stocks"]
         calculate = options["calculate"]
         max_reports_num = options["max_reports_num"]
+
+        if isinstance(max_reports_num, list):
+            max_reports_num = max_reports_num[0]  # vs code debug issue
 
         if file_path:
             path = Path(file_path)
