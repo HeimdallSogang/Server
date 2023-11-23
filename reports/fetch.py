@@ -647,7 +647,7 @@ def calculate_hit_rate_of_analyst():
             analyst.save()
             calculationSuccess += 1
         except Exception as e:
-            print(f"Exception on saving report: {report}")
+            print(f"Exception on saving analyst: {analyst}")
             print(e)
             break
 
