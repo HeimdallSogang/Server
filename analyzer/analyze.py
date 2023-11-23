@@ -15,26 +15,21 @@ def get_openai_client():
         load_dotenv()
         api_key = os.getenv("OPENAI_API_KEY")
 
-    try:
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    except Exception as e:
-        print(f"Error on OpenAI client configuration: {e}")
-        return None
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     return client
 
 
 def analyze_pdf(pdf_url, test=False):
     # get analysts from the first page
-    # first_page_text = read_pdf(pdf_url, from_page=1, to_page=1)
-    # analysts = get_analysts(first_page_text, test=test)
+    first_page_text = read_pdf(pdf_url, from_page=1, to_page=1)
+    analysts = get_analysts(first_page_text, test=test)
 
     # get negative points from only the first two pages (pages that mainly contains text)
     all_text = read_pdf(pdf_url, to_page=2)
     negative_points = get_negative_points(all_text, test=test)
 
-    # return {"writers": analysts, "negative points": negative_points}
-    return None
+    return {"writers": analysts, "negative points": negative_points}
 
 
 def get_negative_points(text_list: list, test=False) -> list:
@@ -192,22 +187,39 @@ def read_pdf(pdf_url, from_page=1, to_page=-1, max_text_length=1800) -> list:
 def test_analyze_pdf(pdf_url):
     start_time = time.time()
 
+    print(f"analzye_pdf({pdf_url}) is called...")
     result = analyze_pdf(pdf_url, test=True)
+    print(f"\nanalzye_pdf({pdf_url}) returns:")
     print(result)
 
     end_time = time.time()
-    print(f"Elapsed time: {end_time - start_time:.2f}s")
+    print(f"Elapsed time: {end_time - start_time:.2f}s", end="\n\n")
 
 
 if __name__ == "__main__":
     pdf_urls = [
         # 삼성전자 리포트
-        "https://ssl.pstatic.net/imgstock/upload/research/company/1699846357166.pdf"
+        "https://ssl.pstatic.net/imgstock/upload/research/company/1699846357166.pdf",
         # "https://ssl.pstatic.net/imgstock/upload/research/company/1699234215528.pdf",
         # "https://ssl.pstatic.net/imgstock/upload/research/company/1698805833360.pdf",
         # "https://ssl.pstatic.net/imgstock/upload/research/company/1698803821224.pdf",
         # "https://ssl.pstatic.net/imgstock/upload/research/company/1698879199721.pdf",
+        # 카카오 리포트
+        "https://ssl.pstatic.net/imgstock/upload/research/company/1699836094681.pdf",
+        # "https://ssl.pstatic.net/imgstock/upload/research/company/1699582274643.pdf",
+        # "https://ssl.pstatic.net/imgstock/upload/research/company/1699580197719.pdf",
+        # "https://ssl.pstatic.net/imgstock/upload/research/company/1699579099836.pdf",
+        # "https://ssl.pstatic.net/imgstock/upload/research/company/1699576457107.pdf",
+        # "https://ssl.pstatic.net/imgstock/upload/research/company/1699576266087.pdf",
+        # "https://ssl.pstatic.net/imgstock/upload/research/company/1699574035557.pdf",
+        # "https://ssl.pstatic.net/imgstock/upload/research/company/1699572383217.pdf",
+        # "https://ssl.pstatic.net/imgstock/upload/research/company/1699320065563.pdf",
+        # "https://ssl.pstatic.net/imgstock/upload/research/company/1698277161864.pdf",
     ]
 
+    start_time = time.time()
     for pdf_url in pdf_urls:
         test_analyze_pdf(pdf_url)
+
+    end_time = time.time()
+    print(f"Total elapsed time: {end_time - start_time:.2f}s", end="\n\n")
