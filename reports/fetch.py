@@ -286,19 +286,31 @@ def fetch_stock_reports(stock_name, currency="KRW", max_reports_num=-1):
 
             report_title = report_url_elem.text if report_url_elem else None
             if report_title is None:
+                print(f"Unexpected page form around report title")
+                print(f"URL was {url}")
+                print(f"Skipping this report")
                 continue
 
             analyst_company = columns[2].text.strip()
             if analyst_company is None:
+                print(f"Unexpected page form around analyst company")
+                print(f"URL was {url}")
+                print(f"Skipping this report")
                 continue
 
             file_url_elem = columns[3].find("a")
             report_url = file_url_elem["href"] if file_url_elem else None
             if report_url is None:
+                print(f"Unexpected page form around report url")
+                print(f"URL was {url}")
+                print(f"Skipping this report")
                 continue
 
             publish_date_text = columns[4].text.strip()
             if len(publish_date_text) == 0:
+                print(f"Unexpected page form around report publish date")
+                print(f"URL was {url}")
+                print(f"Skipping this report")
                 continue
             publish_date = text_to_date(publish_date_text)
 
@@ -306,6 +318,7 @@ def fetch_stock_reports(stock_name, currency="KRW", max_reports_num=-1):
             if Report.objects.filter(
                 title=report_title, publish_date=publish_date
             ).exists():
+                print(f"Skipping existing report with title {report_title}")
                 continue
 
             analysis = analyze_pdf(report_url)
@@ -314,12 +327,20 @@ def fetch_stock_reports(stock_name, currency="KRW", max_reports_num=-1):
 
             report_detail = get_report_detail_info(report_detail_page_url)
             if report_detail is None:
-                break
+                print("Unexpected page form in report details")
+                print(f"URL was {report_detail_page_url}")
+                print(f"Skipping this report")
+                continue
 
             target_price, written_sentiment = report_detail
             target_price = Decimal(target_price)
 
             # report object with missing hidden_sentiment, is_newest, next_publish_date
+            price_on_publish = get_price_on_publish(stock, publish_date)
+            if price_on_publish is None:
+                print(f"Failed to get price on publish of report {report_title}")
+                print(f"Skipping this report")
+                continue
             report = Report(
                 title=report_title,
                 stock=stock,
@@ -327,7 +348,7 @@ def fetch_stock_reports(stock_name, currency="KRW", max_reports_num=-1):
                 target_price=target_price,
                 publish_date=publish_date,
                 written_sentiment=written_sentiment,
-                price_on_publish=get_price_on_publish(stock, publish_date),
+                price_on_publish=price_on_publish,
             )
 
             # save analaysts to DB
@@ -341,7 +362,8 @@ def fetch_stock_reports(stock_name, currency="KRW", max_reports_num=-1):
             except Exception as e:
                 print(f"Exception on saving analysts: {analyst}")
                 print(e)
-                break
+                print(f"Skipping this report")
+                continue
 
             hidden_sentiment = get_hidden_sentiment(
                 report=report, analysts=analyst_list
@@ -361,7 +383,9 @@ def fetch_stock_reports(stock_name, currency="KRW", max_reports_num=-1):
             except Exception as e:
                 print(f"Exception on saving report: {report}")
                 print(e)
-                break
+                print(f"IMPORTANT: analysts are saved but report is not. revise this report")
+                print(f"Continuing to next report")
+                continue
 
             # connect analaysts and report on DB
             try:
@@ -370,7 +394,9 @@ def fetch_stock_reports(stock_name, currency="KRW", max_reports_num=-1):
             except Exception as e:
                 print(f"Exception on saving 'Writes': {report} {analyst}")
                 print(e)
-                break
+                print(f"IMPORTANT: analysts and reports are saved, but 'writes' is not. revise this report")
+                print(f"Continuing to next report")
+                continue
 
             # save negative points on DB
             try:
@@ -383,12 +409,15 @@ def fetch_stock_reports(stock_name, currency="KRW", max_reports_num=-1):
             except Exception as e:
                 print(f"Exception on saving 'Point': {point}")
                 print(e)
+                print(f"IMPORTANT: analysts, reports, and writes are saved, but points are not. revise this report")
+                print(f"Continuing to next report")
                 break
 
             # Print results
-            print(f"Saved report: {report}")
-            print(f"By analysts: {analyst_list}")
-            print(f"Points on report: {point_list}")
+            print(f"\nSaved: ")
+            print(f"    report: {report}")
+            print(f"    by analysts: {analyst_list}")
+            print(f"    with points: {point_list}", end="\n\n")
 
         # 다음 페이지 없음을 의미
         if not soup.select_one("table.Nnavi td.pgRR"):
