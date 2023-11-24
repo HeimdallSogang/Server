@@ -635,14 +635,6 @@ def calculate_hit_rate_of_analyst():
         days_to_first_hit_sum = total["total_days_to_first_hit"]
         days_to_first_miss_sum = total["total_days_to_first_miss"]
 
-        if not (
-            days_hit_sum
-            and days_missed_sum
-            and days_to_first_hit_sum
-            and days_to_first_miss_sum
-        ):
-            continue
-
         print(f"days_hit_sum : {days_hit_sum}")
         print(f"days_missed_sum : {days_missed_sum}")
         print(f"days_to_first_hit_sum : {days_to_first_hit_sum}")
