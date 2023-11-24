@@ -16,15 +16,25 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings
+from django.views.static import serve
+from django.urls import re_path
+from . import settings
 
 urlpatterns = [
-    path('sellpointadministrator/', admin.site.urls),
-    path('analysts/', include("analysts.urls")),
-    path('reports/', include("reports.urls")),
+    path("sellpointadministrator/", admin.site.urls),
+    path("analysts/", include("analysts.urls")),
+    path("reports/", include("reports.urls")),
+    path("stocks/", include("stocks.urls")),
+    path("search/", include("search.urls")),
+    re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
+    re_path(
+        r"^static/(?:.*)$",
+        serve,
+        {
+            "document_root": settings.STATIC_ROOT,
+        },
+    ),
 ]
 
 if settings.DEBUG is True:
-    urlpatterns += [
-        path("__debug__/", include("debug_toolbar.urls"))
-    ]
+    urlpatterns += [path("__debug__/", include("debug_toolbar.urls"))]

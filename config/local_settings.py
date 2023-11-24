@@ -32,8 +32,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "reports",
     "analysts",
+    "reports",
+    "stocks",
+    "django_filters",
     "debug_toolbar",
 ]
 
