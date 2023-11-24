@@ -1,9 +1,9 @@
 from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
+from analyzer.analyze import analyze_pdf
 from reports.fetch import calculate_hit_rate_of_single_analyst
 
 from reports.models import Analyst, Point, Report, Writes
-from test_code.analyze import analyze, read_pdf
 
 
 class Command(BaseCommand):
@@ -83,17 +83,9 @@ class Command(BaseCommand):
                 generate_points = True if generate_points_input == "y" else False
                 if not generate_points:
                     break
-
-                negative_points = []
-                text_per_page = read_pdf(report.url)
-                for text in text_per_page:
-                    analysis = analyze(text)
-                    if not analysis:
-                        continue
-                    if "reasons" in analysis:
-                        for neg_point in analysis["reasons"]:
-                            negative_points.append(neg_point)
-                all_generated_points += negative_points
+                
+                analysis = analyze_pdf(report.url)
+                all_generated_points += analysis["negative points"]
 
                 # display new points
                 print("Generated points: ")
