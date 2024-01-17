@@ -30,8 +30,8 @@ def get_env_variable(var_name):
         raise ImproperlyConfigured(error_msg)
 
 
-SECRET_KEY = get_env_variable("DJANGO_SECRET")
-# SECRET_KEY = os.getenv("DJANGO_SECRET")
+# SECRET_KEY = get_env_variable("DJANGO_SECRET")
+SECRET_KEY = os.getenv("DJANGO_SECRET")
 
 DEBUG = True
 
@@ -96,22 +96,22 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
     "default": {
-        # 'ENGINE': 'django.db.backends.mysql', # engine: mysql
-        # 'NAME' : os.getenv("DATABASE"), # DB Name
-        # 'USER' : os.getenv("DB_USER"), # DB User
-        # 'PASSWORD' : os.getenv("DB_PASSWORD"), # Password
-        # 'HOST': os.getenv("DB_HOST"), # 생성한 데이터베이스 엔드포인트
-        # 'PORT': os.getenv("DB_PORT"), # 데이터베이스 포트
-        # 'OPTIONS':{
-        #     'init_command' : "SET sql_mode='STRICT_TRANS_TABLES'"
-        # }
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": get_env_variable("DATABASE"),
-        "USER": get_env_variable("DB_USER"),
-        "PASSWORD": get_env_variable("DB_PASSWORD"),
-        "HOST": get_env_variable("DB_HOST"),
-        "PORT": get_env_variable("DB_PORT"),
-        "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
+        'ENGINE': 'django.db.backends.mysql', # engine: mysql
+        'NAME' : os.getenv("DATABASE"), # DB Name
+        'USER' : os.getenv("DB_USER"), # DB User
+        'PASSWORD' : os.getenv("DB_PASSWORD"), # Password
+        'HOST': os.getenv("DB_HOST"), # 생성한 데이터베이스 엔드포인트
+        'PORT': os.getenv("DB_PORT"), # 데이터베이스 포트
+        'OPTIONS':{
+            'init_command' : "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
+        # "ENGINE": "django.db.backends.mysql",
+        # "NAME": get_env_variable("DATABASE"),
+        # "USER": get_env_variable("DB_USER"),
+        # "PASSWORD": get_env_variable("DB_PASSWORD"),
+        # "HOST": get_env_variable("DB_HOST"),
+        # "PORT": get_env_variable("DB_PORT"),
+        # "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
     }
 }
 
