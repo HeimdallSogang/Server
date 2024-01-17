@@ -35,11 +35,13 @@ SECRET_KEY = get_env_variable("DJANGO_SECRET")
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["https://port-0-server-51ih2alrhinkm9.sel5.cloudtype.app/", "*"]
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = ["*"]
+CSRF_TRUSTED_ORIGINS = ["https://port-0-server-51ih2alrhinkm9.sel5.cloudtype.app/"]
+
+
 # Application definition
 
 INSTALLED_APPS = [
