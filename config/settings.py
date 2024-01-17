@@ -40,8 +40,13 @@ ALLOWED_HOSTS = ["*"]
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_TRUSTED_ORIGINS = ["https://port-0-server-51ih2alrhinkm9.sel5.cloudtype.app/", "https://*.127.0.0.1", "https://*", "http://*"]
+import socket
+def get_ipaddress():
+    host_name = socket.gethostname()
+    ip_address = socket.gethostbyname(host_name)
+    return "http://"+ip_address
 
+CSRF_TRUSTED_ORIGINS = [get_ipaddress()]
 
 # Application definition
 
