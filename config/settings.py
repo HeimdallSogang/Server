@@ -39,7 +39,7 @@ ALLOWED_HOSTS = ["*"]
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = ["http://port-0-server-51ih2alrhinkm9.sel5.cloudtype.app/", "https://port-0-server-51ih2alrhinkm9.sel5.cloudtype.app/"]
+CSRF_TRUSTED_ORIGINS = ["http://port-0-server-51ih2alrhinkm9.sel5.cloudtype.app/*", "https://port-0-server-51ih2alrhinkm9.sel5.cloudtype.app/*"]
 
 # Application definition
 
