@@ -20,7 +20,7 @@ jsonschema==4.20.0
 jsonschema-specifications==2023.12.1
 multidict==6.0.4
 mysql==0.0.3
-mysqlclient==2.2.1
+mysqlclient==1.4.2
 openai==0.28.0
 packaging==23.2
 PyMySQL==1.1.0
