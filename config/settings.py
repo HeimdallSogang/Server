@@ -33,7 +33,7 @@ def get_env_variable(var_name):
 SECRET_KEY = get_env_variable("DJANGO_SECRET")
 # SECRET_KEY = os.getenv("DJANGO_SECRET")
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
