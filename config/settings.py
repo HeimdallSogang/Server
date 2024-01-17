@@ -37,7 +37,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["https://port-0-server-51ih2alrhinkm9.sel5.cloudtype.app/", "*"]
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ORIGINS = [
+    "https://port-0-server-51ih2alrhinkm9.sel5.cloudtype.app",
+]
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = ["https://port-0-server-51ih2alrhinkm9.sel5.cloudtype.app/"]
 
