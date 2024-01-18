@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from openai import OpenAI
+import openai
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -13,7 +13,7 @@ load_dotenv()
 
 def analyze(text):
     try:
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         messages = [
             {
                 "role": "system",
@@ -161,19 +161,19 @@ def crawl_pdf_link(url):
         return ""
 
 if __name__ == "__main__":
-    start_url = "https://finance.naver.com/research/company_list.naver?keyword=&brokerCode=&writeFromDate=&writeToDate=&searchType=itemCode&itemName=%C4%AB%C4%AB%BF%C0&itemCode=035720&x=40&y=33"
-    for i in range(1, 10):
-        url = f"{start_url}&page={i}"
-        pdf_urls = crawl_pdf_link(url)
-        for pdf_url in pdf_urls:
-            print(pdf_url)
-            pdf_url = "https://ssl.pstatic.net/imgstock/upload/research/company/1695343870257.pdf"
-            text_list = read_pdf(pdf_url)
-            for text in text_list:
-                print(text)
-                try:
-                    result = analyze(text)
-                    print(result)
-                    print("\n\n\n\n")
-                except Exception as e:
-                    print(e)
+    # start_url = "https://finance.naver.com/research/company_list.naver?keyword=&brokerCode=&writeFromDate=&writeToDate=&searchType=itemCode&itemName=%C4%AB%C4%AB%BF%C0&itemCode=035720&x=40&y=33"
+    # for i in range(1, 10):
+    #     url = f"{start_url}&page={i}"
+    #     pdf_urls = crawl_pdf_link(url)
+    #     for pdf_url in pdf_urls:
+    #         print(pdf_url)
+    pdf_url = "https://ssl.pstatic.net/imgstock/upload/research/company/1695343870257.pdf"
+    text_list = read_pdf(pdf_url)
+    for text in text_list:
+        print(text)
+        try:
+            result = analyze(text)
+            print(result)
+            print("\n\n\n\n")
+        except Exception as e:
+            print(e)
